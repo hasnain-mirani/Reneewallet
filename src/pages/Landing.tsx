@@ -263,7 +263,7 @@ const Landing = () => {
             Ready to <span className="bg-gradient-neon bg-clip-text text-transparent">get started</span>?
           </h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Join thousands of users managing their crypto with InventWallet
+            Join thousands of users managing their crypto with Renee wallet
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
