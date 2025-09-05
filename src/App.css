@@ -1,0 +1,63 @@
+/* Root Container */
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+
+  /* Klever-style dark gradient background */
+  background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+  color: #ffffff;
+  font-family: 'Inter', 'Poppins', sans-serif;
+  min-height: 100vh;
+}
+
+/* Logo */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  will-change: transform, filter;
+}
+.logo:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 2em #ff2ff5aa); /* Klever neon pink glow */
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #00e5ffaa); /* Klever neon blue glow */
+}
+
+/* Logo Spin Animation */
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+/* Card Component */
+.card {
+  padding: 2em;
+  border-radius: 1.5rem;
+  background: linear-gradient(145deg, #1e1e1e, #2b2b2b);
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 12px 30px rgba(255, 47, 245, 0.25);
+}
+
+/* Text Styling */
+.read-the-docs {
+  color: #aaa;
+  font-size: 0.95rem;
+  transition: color 0.3s ease;
+}
+.read-the-docs:hover {
+  color: #ff2ff5;
+}

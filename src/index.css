@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design system adapted to Klever.io theme */
+@layer base {
+  :root {
+    --background: 240 20% 3%; /* near black */
+    --foreground: 0 0% 100%;  /* pure white */
+
+    --card: 240 20% 6%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 240 20% 6%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 315 100% 50%; /* neon pink */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 195 100% 50%; /* neon cyan/blue */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 12% 12%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 315 100% 50%; /* pink accent */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 12% 15%;
+    --input: 240 12% 15%;
+    --ring: 315 100% 50%; /* neon pink ring */
+
+    /* Brand neon colors */
+    --neon-pink: 315 100% 50%;
+    --neon-pink-bright: 315 100% 55%;
+    --neon-pink-dark: 315 100% 35%;
+
+    --neon-blue: 195 100% 50%;
+    --neon-blue-bright: 195 100% 55%;
+    --neon-blue-dark: 195 100% 35%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(315 100% 50%), hsl(195 100% 50%));
+    --gradient-card: linear-gradient(145deg, hsl(240 20% 6%), hsl(240 20% 10%));
+    --gradient-neon: linear-gradient(135deg, hsl(315 100% 50%), hsl(195 100% 50%));
+
+    /* Shadows */
+    --shadow-neon: 0 0 30px hsl(315 100% 50% / 0.4);
+    --shadow-card: 0 8px 20px hsl(240 20% 2% / 0.8);
+    --shadow-float: 0 10px 25px -3px hsl(195 100% 50% / 0.3);
+
+    --radius: 0.75rem;
+
+    /* Sidebar */
+    --sidebar-background: 240 20% 4%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 315 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 20% 8%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 20% 10%;
+    --sidebar-ring: 315 100% 50%;
+  }
+
+  .dark {
+    /* Same as root since Klever is dark-first */
+    --background: 240 20% 3%;
+    --foreground: 0 0% 100%;
+
+    --card: 240 20% 6%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 240 20% 6%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 315 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 195 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 12% 12%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 315 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 12% 15%;
+    --input: 240 12% 15%;
+    --ring: 315 100% 50%;
+
+    /* Neon colors */
+    --neon-pink: 315 100% 50%;
+    --neon-pink-bright: 315 100% 55%;
+    --neon-pink-dark: 315 100% 35%;
+
+    --neon-blue: 195 100% 50%;
+    --neon-blue-bright: 195 100% 55%;
+    --neon-blue-dark: 195 100% 35%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(315 100% 50%), hsl(195 100% 50%));
+    --gradient-card: linear-gradient(145deg, hsl(240 20% 6%), hsl(240 20% 10%));
+    --gradient-neon: linear-gradient(135deg, hsl(315 100% 50%), hsl(195 100% 50%));
+
+    /* Shadows */
+    --shadow-neon: 0 0 30px hsl(315 100% 50% / 0.5);
+    --shadow-card: 0 8px 20px hsl(240 20% 2% / 0.8);
+    --shadow-float: 0 10px 25px -3px hsl(195 100% 50% / 0.4);
+
+    --sidebar-background: 240 20% 4%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 315 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 20% 8%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 20% 10%;
+    --sidebar-ring: 315 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Poppins', 'Inter', sans-serif;
+  }
+}
