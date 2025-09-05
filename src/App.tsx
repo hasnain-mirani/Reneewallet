@@ -19,6 +19,7 @@ import Staking from '@/pages/Staking' // <-- add this import
 import NotFound from "./pages/NotFound";
 import { WalletModalProvider } from "@/components/wallet/walletModalContext";
 import WalletConnectModal from "@/components/wallet/WalletModal";
+import Portfolio from "./pages/Portfolio";
 const queryClient = new QueryClient();
 
 const AppShell = () => {
@@ -42,7 +43,7 @@ const AppShell = () => {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/portfolio" element={<Portfolio/>} />
           <Route path="/staking" element={<Staking />} /> {/* <-- router entry */}
           <Route path="/send" element={<SendPage />} />
           <Route path="/receive" element={<ReceivePage />} />

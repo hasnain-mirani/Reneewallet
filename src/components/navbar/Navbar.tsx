@@ -60,7 +60,7 @@ const AppNavbar = () => {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-2">
-            <Tab to="/dashboard" label="Portfolio" />
+            <Tab to="/portfolio" label="Portfolio" />
             <Tab to="/Staking" label="Staking" />
 
             {/* Trade dropdown (Menubar) */}
