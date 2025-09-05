@@ -11,8 +11,7 @@ const Footer = () => {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-10">
           <div>
             <h3 className="text-2xl font-bold bg-gradient-neon bg-clip-text text-transparent">
-              InventWallet
-            </h3>
+Renee wallet            </h3>
             <p className="text-sm text-muted-foreground mt-2">
               The multichain wallet for <span className="font-medium">TRON</span> &{" "}
               <span className="font-medium">Solana</span> ecosystems.
@@ -143,10 +142,10 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            Built with 💙 by InventWallet. Your keys, your crypto.
+            Built with 💙 by Renee wallet. Your keys, your crypto.
           </p>
           <div className="flex items-center gap-4 text-xs">
-            <span className="text-muted-foreground">© {year} InventWallet</span>
+            <span className="text-muted-foreground">© {year} Renee wallet</span>
             <a href="#" className="text-muted-foreground hover:text-foreground">
               Terms
             </a>
