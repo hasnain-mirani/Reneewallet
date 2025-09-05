@@ -90,7 +90,7 @@ const Landing = () => {
                 onClick={() => navigate("/dashboard")}
               >
                 <Download className="w-5 h-5 mr-2" />
-                Launch InventWallet
+                Launch Renee wallet
               </Button>
               <Button variant="outline" size="lg" className="px-8 py-4 text-lg">
                 <Github className="w-5 h-5 mr-2" />
