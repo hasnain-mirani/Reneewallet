@@ -2,133 +2,131 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design system adapted to Klever.io theme */
+/* Design system adapted to Klever.io purple scheme */
 @layer base {
   :root {
-    --background: 240 20% 3%; /* near black */
-    --foreground: 0 0% 100%;  /* pure white */
+    --background: 250 13% 5%;  /* near black with a hint of purple */
+    --foreground: 0 0% 100%;
 
-    --card: 240 20% 6%;
+    --card: 250 12% 8%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 240 20% 6%;
+    --popover: 250 12% 8%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 315 100% 50%; /* neon pink */
+    /* brand */
+    --primary: 283 90% 60%; /* vivid purple */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 195 100% 50%; /* neon cyan/blue */
+    --secondary: 318 90% 58%; /* magenta accent */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 12% 12%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 250 10% 14%;
+    --muted-foreground: 0 0% 70%;
 
-    --accent: 315 100% 50%; /* pink accent */
+    --accent: 283 90% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 12% 15%;
-    --input: 240 12% 15%;
-    --ring: 315 100% 50%; /* neon pink ring */
+    --border: 250 10% 17%;
+    --input: 250 10% 17%;
+    --ring: 283 90% 60%; /* purple ring */
 
-    /* Brand neon colors */
-    --neon-pink: 315 100% 50%;
-    --neon-pink-bright: 315 100% 55%;
-    --neon-pink-dark: 315 100% 35%;
+    /* Keep names the same, swap hues to purple/magenta */
+    --neon-pink: 283 100% 60%;         /* now purple */
+    --neon-pink-bright: 283 100% 65%;
+    --neon-pink-dark: 283 100% 40%;
 
-    --neon-blue: 195 100% 50%;
-    --neon-blue-bright: 195 100% 55%;
-    --neon-blue-dark: 195 100% 35%;
+    --neon-blue: 318 100% 58%;         /* now magenta */
+    --neon-blue-bright: 318 100% 62%;
+    --neon-blue-dark: 318 100% 42%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(315 100% 50%), hsl(195 100% 50%));
-    --gradient-card: linear-gradient(145deg, hsl(240 20% 6%), hsl(240 20% 10%));
-    --gradient-neon: linear-gradient(135deg, hsl(315 100% 50%), hsl(195 100% 50%));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--neon-pink)), hsl(var(--neon-blue)));
+    --gradient-card: linear-gradient(145deg, hsl(250 12% 8%), hsl(250 12% 12%));
+    --gradient-neon: linear-gradient(135deg, hsl(var(--neon-pink)), hsl(var(--neon-blue)));
 
     /* Shadows */
-    --shadow-neon: 0 0 30px hsl(315 100% 50% / 0.4);
-    --shadow-card: 0 8px 20px hsl(240 20% 2% / 0.8);
-    --shadow-float: 0 10px 25px -3px hsl(195 100% 50% / 0.3);
+    --shadow-neon: 0 0 28px hsl(var(--neon-pink) / 0.45),
+                   0 0 16px hsl(var(--neon-blue) / 0.35);
+    --shadow-card: 0 8px 20px hsl(250 12% 2% / 0.8);
+    --shadow-float: 0 10px 25px -3px hsl(var(--neon-pink) / 0.28);
 
     --radius: 0.75rem;
 
     /* Sidebar */
-    --sidebar-background: 240 20% 4%;
+    --sidebar-background: 250 13% 4%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 315 100% 50%;
+    --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 20% 8%;
+    --sidebar-accent: 250 12% 10%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 240 20% 10%;
-    --sidebar-ring: 315 100% 50%;
+    --sidebar-border: 250 12% 12%;
+    --sidebar-ring: var(--primary);
   }
 
   .dark {
-    /* Same as root since Klever is dark-first */
-    --background: 240 20% 3%;
+    /* Same values (dark-first) */
+    --background: 250 13% 5%;
     --foreground: 0 0% 100%;
 
-    --card: 240 20% 6%;
+    --card: 250 12% 8%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 240 20% 6%;
+    --popover: 250 12% 8%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 315 100% 50%;
+    --primary: 283 90% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 195 100% 50%;
+    --secondary: 318 90% 58%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 12% 12%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 250 10% 14%;
+    --muted-foreground: 0 0% 70%;
 
-    --accent: 315 100% 50%;
+    --accent: 283 90% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 12% 15%;
-    --input: 240 12% 15%;
-    --ring: 315 100% 50%;
+    --border: 250 10% 17%;
+    --input: 250 10% 17%;
+    --ring: 283 90% 60%;
 
-    /* Neon colors */
-    --neon-pink: 315 100% 50%;
-    --neon-pink-bright: 315 100% 55%;
-    --neon-pink-dark: 315 100% 35%;
+    --neon-pink: 283 100% 60%;
+    --neon-pink-bright: 283 100% 65%;
+    --neon-pink-dark: 283 100% 40%;
 
-    --neon-blue: 195 100% 50%;
-    --neon-blue-bright: 195 100% 55%;
-    --neon-blue-dark: 195 100% 35%;
+    --neon-blue: 318 100% 58%;
+    --neon-blue-bright: 318 100% 62%;
+    --neon-blue-dark: 318 100% 42%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(315 100% 50%), hsl(195 100% 50%));
-    --gradient-card: linear-gradient(145deg, hsl(240 20% 6%), hsl(240 20% 10%));
-    --gradient-neon: linear-gradient(135deg, hsl(315 100% 50%), hsl(195 100% 50%));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--neon-pink)), hsl(var(--neon-blue)));
+    --gradient-card: linear-gradient(145deg, hsl(250 12% 8%), hsl(250 12% 12%));
+    --gradient-neon: linear-gradient(135deg, hsl(var(--neon-pink)), hsl(var(--neon-blue)));
 
-    /* Shadows */
-    --shadow-neon: 0 0 30px hsl(315 100% 50% / 0.5);
-    --shadow-card: 0 8px 20px hsl(240 20% 2% / 0.8);
-    --shadow-float: 0 10px 25px -3px hsl(195 100% 50% / 0.4);
+    --shadow-neon: 0 0 30px hsl(var(--neon-pink) / 0.5),
+                   0 0 18px hsl(var(--neon-blue) / 0.4);
+    --shadow-card: 0 8px 20px hsl(250 12% 2% / 0.8);
+    --shadow-float: 0 10px 25px -3px hsl(var(--neon-pink) / 0.32);
 
-    --sidebar-background: 240 20% 4%;
+    --sidebar-background: 250 13% 4%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 315 100% 50%;
+    --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 20% 8%;
+    --sidebar-accent: 250 12% 10%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 240 20% 10%;
-    --sidebar-ring: 315 100% 50%;
+    --sidebar-border: 250 12% 12%;
+    --sidebar-ring: var(--primary);
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
 
   body {
     @apply bg-background text-foreground antialiased;

@@ -54,7 +54,7 @@ const AppNavbar = () => {
               <Wallet className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold bg-gradient-neon bg-clip-text text-transparent">
-              InventWallet
+              Renee wallet
             </span>
           </Link>
 
@@ -103,7 +103,7 @@ const AppNavbar = () => {
             </Menubar>
 
             <Tab to="/rewards" label="Rewards" />
-            <Tab to="/leap-fest" label="Leap Fest" badge="NEW" />
+            <Tab to="/leap-fest" label="Renee wallet Fest" badge="NEW" />
 
             {/* Right-side connect pill */}
          <ConnectWalletButton className="ml-3 rounded-full bg-white text-black hover:bg-white/90 border border-white/20 h-9 px-4" />
@@ -138,7 +138,7 @@ const AppNavbar = () => {
                 <Link to="/receive" onClick={() => setOpen(false)} className={`${pillBase} ${pillIdle}`}>Deposit</Link>
               </div>
               <Tab to="/rewards" label="Rewards" />
-              <Tab to="/leap-fest" label="Leap Fest" badge="NEW" />
+              <Tab to="/leap-fest" label="Renee wallet" badge="NEW" />
              <ConnectWalletButton className="ml-3 rounded-full bg-white text-black hover:bg-white/90 border border-white/20 h-9 px-4" />
             </div>
           </div>

@@ -44,6 +44,7 @@ const AppShell = () => {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/portfolio" element={<Portfolio/>} />
+          <Route path="/dashboard" element={<Dashboard/>} />
           <Route path="/staking" element={<Staking />} /> {/* <-- router entry */}
           <Route path="/send" element={<SendPage />} />
           <Route path="/receive" element={<ReceivePage />} />
