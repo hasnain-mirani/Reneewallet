@@ -10,7 +10,7 @@ import { ArrowUpDown, ArrowRight, RefreshCw, PlugZap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useWalletModal } from "@/components/wallet/useWalletModal";
 import ConnectWalletButton from "@/components/wallet/ConnectWalletButton";
-import { swapEthToToken, swapTokenToEth, unwrapAllWethToEth, USDT } from "@/lib/uniSwap";
+
 
 function getHex(dec: number) { return "0x" + dec.toString(16); }
 
@@ -95,27 +95,7 @@ export default function ConvertPage() {
       setLoading(true);
       await ensureMainnet(provider);
 
-      if (fromToken === "eth" && toToken === "usdt") {
-        await swapEthToToken({
-          ethProvider: provider,
-          tokenOut: USDT,
-          amountInEth: fromAmount,
-          slippageBps: 50, // 0.5%
-        });
-        toast({ title: "Swap submitted", description: `Swapping ${fromAmount} ETH → USDT via Uniswap v3` });
-      } else {
-        // USDT -> ETH (results in WETH -> you may unwrap)
-        await swapTokenToEth({
-          ethProvider: provider,
-          tokenIn: USDT,
-          amountIn: fromAmount,
-          slippageBps: 50,
-        });
-
-        // Optional unwrap WETH to ETH:
-        await unwrapAllWethToEth(provider);
-        toast({ title: "Swap submitted", description: `Swapping ${fromAmount} USDT → ETH via Uniswap v3` });
-      }
+      
 
       setFromAmount("");
       setToAmount("");
