@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Search } from "lucide-react";
-import { useWalletModal } from "@/components/wallet/walletModalContext";
+import { useWalletModal } from "./useWalletModal";
 
 type Category = "All Wallets" | "Cosmos" | "EVM" | "Move" | "Solana" | "Sui" | "CEX accounts";
 

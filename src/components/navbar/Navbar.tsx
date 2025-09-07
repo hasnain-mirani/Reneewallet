@@ -11,8 +11,8 @@ import {
   MenubarItem,
 } from "@/components/ui/menubar";
 import { Button } from "@/components/ui/button";
-import ConnectWalletButton from "../wallet/ConnectWalletButton";
 
+import NavWalletControl from "@/components/wallet/NavWalletControl";
 const AppNavbar = () => {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
@@ -106,7 +106,10 @@ const AppNavbar = () => {
             <Tab to="/leap-fest" label="Renee wallet Fest" badge="NEW" />
 
             {/* Right-side connect pill */}
-         <ConnectWalletButton className="ml-3 rounded-full bg-white text-black hover:bg-white/90 border border-white/20 h-9 px-4" />
+         <div className="hidden md:flex items-center gap-2">
+  {/* ... your tabs ... */}
+  <NavWalletControl className="ml-3" />
+</div>
           </div>
 
           {/* Mobile toggle */}
@@ -139,7 +142,9 @@ const AppNavbar = () => {
               </div>
               <Tab to="/rewards" label="Rewards" />
               <Tab to="/leap-fest" label="Renee wallet" badge="NEW" />
-             <ConnectWalletButton className="ml-3 rounded-full bg-white text-black hover:bg-white/90 border border-white/20 h-9 px-4" />
+            <div className="mt-2">
+  <NavWalletControl />
+</div>
             </div>
           </div>
         )}

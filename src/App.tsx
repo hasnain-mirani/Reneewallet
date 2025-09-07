@@ -17,8 +17,11 @@ import HistoryPage from "./pages/History";
 import SettingsPage from "./pages/Settings";
 import Staking from '@/pages/Staking' // <-- add this import
 import NotFound from "./pages/NotFound";
-import { WalletModalProvider } from "@/components/wallet/walletModalContext";
-import WalletConnectModal from "@/components/wallet/WalletModal";
+import { WalletModalProvider } from "./components/wallet/walletModalContext";
+import WalletConnectModal from "@/components/wallet/WalletConnectModal";
+
+
+
 import Portfolio from "./pages/Portfolio";
 const queryClient = new QueryClient();
 
