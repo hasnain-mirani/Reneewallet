@@ -9,6 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview"
+    ,
+  "engines": { "node": ">=18 <21" }
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
