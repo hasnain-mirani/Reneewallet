@@ -17,7 +17,7 @@ import HistoryPage from "./pages/History";
 import SettingsPage from "./pages/Settings";
 import Staking from '@/pages/Staking' // <-- add this import
 import NotFound from "./pages/NotFound";
-import { WalletModalProvider } from "./components/wallet/walletModalContext";
+import { WalletModalProvider } from "@/components/wallet/WalletModalContext";
 import WalletConnectModal from "@/components/wallet/WalletConnectModal";
 
 
@@ -51,7 +51,7 @@ const AppShell = () => {
 <Navbar />
       <main className="flex-1">
         <Routes>
-           <Route path="/onboarding" element={<OnboardingFlow onDone={() => nav("/dashboard")} />} />
+         
           <Route path="/" element={<Landing />} />
           <Route path="/portfolio" element={<Portfolio/>} />
           <Route path="/dashboard" element={<Dashboard/>} />
