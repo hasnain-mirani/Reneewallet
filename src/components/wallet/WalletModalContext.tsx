@@ -1,5 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { WalletModalCtx } from "./walletContext";
+import React, { createContext, useCallback, useMemo, useState } from "react";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_BASE || "http://localhost:5000").trim();
 
@@ -20,18 +19,17 @@ export type WalletModalContextValue = {
   provider?: ProviderId;
   address?: string | null;
 
-  // EVM wallet (MetaMask)
+  // EVM (MetaMask)
   connect: () => Promise<void>;
 
-  // RPC (read-only connections)
+  // RPC (used by onboarding / balance refresh)
   connectSolanaRpc: () => Promise<void>;
   connectTronRpc: () => Promise<void>;
 
-  // helpers
   disconnect: () => void;
-
 };
-// WalletModalCtx moved to ./walletContext
+
+export const WalletModalCtx = createContext<WalletModalContextValue | null>(null);
 
 export function WalletModalProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setOpen] = useState(false);
@@ -118,4 +116,3 @@ export function WalletModalProvider({ children }: { children: React.ReactNode })
 
   return <WalletModalCtx.Provider value={value}>{children}</WalletModalCtx.Provider>;
 }
-
