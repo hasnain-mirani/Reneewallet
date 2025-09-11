@@ -117,8 +117,4 @@ export function WalletModalProvider({ children }: { children: React.ReactNode })
 
   return <WalletModalCtx.Provider value={value}>{children}</WalletModalCtx.Provider>;
 }
-export function useWalletModal() {
-  const ctx = React.useContext(WalletModalCtx);
-  if (!ctx) throw new Error("useWalletModal must be used within a WalletModalProvider");
-  return ctx;
-}       
+
