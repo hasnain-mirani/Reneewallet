@@ -3,8 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import OnboardingFlow from "@/feature/onboarding/OnboardingFlow";
 import Navbar from "./components/navbar/Navbar";
 import Footer from "./components/ui/Footer";
 
@@ -39,12 +39,19 @@ const AppShell = () => {
   ];
   const isWalletView = walletRoutes.some((r) => location.pathname.startsWith(r));
 
+  const navigate = useNavigate();
+
+  function nav(path: string): void {
+    navigate(path);
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
 
 <Navbar />
       <main className="flex-1">
         <Routes>
+           <Route path="/onboarding" element={<OnboardingFlow onDone={() => nav("/dashboard")} />} />
           <Route path="/" element={<Landing />} />
           <Route path="/portfolio" element={<Portfolio/>} />
           <Route path="/dashboard" element={<Dashboard/>} />

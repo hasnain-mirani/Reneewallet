@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import NavWalletControl from "@/components/wallet/NavWalletControl";
+import ConnectWalletNav from "./ConnectWalletNav";
 const AppNavbar = () => {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
@@ -105,10 +106,10 @@ const AppNavbar = () => {
             <Tab to="/rewards" label="Rewards" />
             <Tab to="/leap-fest" label="Renee wallet Fest" badge="NEW" />
 
-            {/* Right-side connect pill */}
+          {/* Right-side connect pill */}
          <div className="hidden md:flex items-center gap-2">
   {/* ... your tabs ... */}
-  <NavWalletControl className="ml-3" />
+ <ConnectWalletNav />
 </div>
           </div>
 
@@ -143,7 +144,7 @@ const AppNavbar = () => {
               <Tab to="/rewards" label="Rewards" />
               <Tab to="/leap-fest" label="Renee wallet" badge="NEW" />
             <div className="mt-2">
-  <NavWalletControl />
+  <ConnectWalletNav />
 </div>
             </div>
           </div>

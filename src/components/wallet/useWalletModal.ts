@@ -1,6 +1,6 @@
 // src/components/wallet/useWalletModal.ts
 import { useContext } from "react";
-import { WalletModalCtx, type WalletModalContextValue } from "./walletModalContext";
+import { WalletModalCtx, type WalletModalContextValue } from "./WalletModalContext";
 
 export function useWalletModal(): WalletModalContextValue {
   const ctx = useContext(WalletModalCtx);

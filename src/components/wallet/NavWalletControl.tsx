@@ -1,79 +1,142 @@
-import * as React from "react";
-import ConnectWalletButton from "@/components/wallet/ConnectWalletButton";
-import { useWalletModal } from "@/components/wallet/useWalletModal";
-import { useToast } from "@/hooks/use-toast";
-import { Plus, Check } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useWallet } from "@/wallet/store";
+import { useWalletModal } from "./useWalletModal";
+import { Copy, LogOut, Wallet, RefreshCw, Lock, Unlock } from "lucide-react";
 
-// put the fox icon in /public/icons/metamask.svg (or change the path)
-const FOX_SRC = "/icons/metamask.svg";
+function truncate(addr?: string, size = 4) {
+  if (!addr) return "—";
+  return `${addr.slice(0, 2 + size)}…${addr.slice(-size)}`;
+}
 
-export default function NavWalletControl({ className = "" }: { className?: string }) {
-  const { address, connect, open } = useWalletModal();
-  const { toast } = useToast();
-  const [copied, setCopied] = React.useState(false);
-  const [imgOk, setImgOk] = React.useState(true);
+export default function NavWalletControl() {
+  const { encrypted, sol, tron, unlock, lock, getBalances } = useWallet();
+  const { open } = useWalletModal();
+  const [busy, setBusy] = useState(false);
+  const hasVault = !!encrypted;
+  const isUnlocked = !!(sol?.address || tron?.address);
 
-  // Not connected -> show your normal Connect Wallet pill
-  if (!address) {
-    return (
-      <ConnectWalletButton
-        mode="modal"
-        className={`rounded-full bg-white text-black hover:bg-white/90 border border-white/20 h-9 px-4 ${className}`}
-      />
-    );
-  }
-
-  // Connected -> show the small fox + plus pill
-  const copyAddr = async () => {
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      toast({ title: "Address copied", description: "Wallet address copied to clipboard." });
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      toast({ title: "Copy failed", variant: "destructive" });
-    }
-  };
+  const dot = (
+    <span
+      className={`mr-2 inline-block h-2 w-2 rounded-full ${
+        isUnlocked ? "bg-emerald-500" : hasVault ? "bg-zinc-400" : "bg-zinc-500"
+      }`}
+    />
+  );
 
   return (
-    <div
-      role="group"
-      className={[
-        "inline-flex items-center h-9 rounded-full bg-foreground/10 border border-foreground/10",
-        "backdrop-blur px-1",
-        className,
-      ].join(" ")}
-    >
-      {/* Fox: copy full address */}
-      <button
-        type="button"
-        onClick={copyAddr}
-        className="h-7 w-7 rounded-full grid place-items-center bg-white shadow-sm"
-        title="Copy address"
-        aria-label="Copy address"
-      >
-        {copied ? (
-          <Check className="h-4 w-4 text-emerald-600" />
-        ) : imgOk ? (
-          <img src={FOX_SRC} alt="MetaMask" className="h-5 w-5" onError={() => setImgOk(false)} />
-        ) : (
-          <span className="text-[10px] font-bold text-black">MM</span>
-        )}
-      </button>
+    <div className="flex items-center gap-2">
+      {/* Pill */}
+      <div className="rounded-full border border-border/60 bg-card/50 px-3 py-1.5 text-sm">
+        <button
+          className="inline-flex items-center gap-2"
+          onClick={() => {
+            if (!hasVault) open(); // no vault: open modal
+          }}
+          title={isUnlocked ? "Wallet ready" : hasVault ? "Vault locked" : "No wallet yet"}
+        >
+          {dot}
+          <Wallet className="h-4 w-4 opacity-80" />
+          <span className="font-medium">
+            {isUnlocked ? "Wallet" : hasVault ? "Locked" : "Connect Wallet"}
+          </span>
+        </button>
+      </div>
 
-      {/* Plus: open your wallet modal / more options */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          open(); // or replace with your chain switcher later
-        }}
-        className="ml-1 h-7 w-7 rounded-full grid place-items-center hover:bg-foreground/10"
-        title="More wallet options"
-        aria-label="More wallet options"
-      >
-        <Plus className="h-4 w-4 text-foreground/80" />
-      </button>
+      {/* Dropdown-like simple panel (no dependency on shadcn dropdown) */}
+      <div className="rounded-lg border border-border/60 bg-card/60 px-3 py-2 text-xs">
+        <div className="mb-1 flex items-center gap-2">
+          <Badge variant="outline">SOL</Badge>
+          <code className="select-text">{truncate(sol?.address, 6)}</code>
+          {sol?.address && (
+            <button
+              className="ml-1 opacity-70 hover:opacity-100"
+              onClick={() => navigator.clipboard.writeText(sol.address!)}
+              title="Copy Solana address"
+            >
+              <Copy className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        <div className="mb-1 flex items-center gap-2">
+          <Badge variant="outline">TRON</Badge>
+          <code className="select-text">{truncate(tron?.address, 6)}</code>
+          {tron?.address && (
+            <button
+              className="ml-1 opacity-70 hover:opacity-100"
+              onClick={() => navigator.clipboard.writeText(tron.address!)}
+              title="Copy TRON address"
+            >
+              <Copy className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        <Separator className="my-2" />
+
+        <div className="flex items-center gap-2">
+          {!hasVault && (
+            <Button size="sm" onClick={open}>
+              Open Modal
+            </Button>
+          )}
+
+          {hasVault && !isUnlocked && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={open}
+              title="Unlock from modal"
+            >
+              <Unlock className="mr-1 h-3.5 w-3.5" /> Unlock
+            </Button>
+          )}
+
+          {isUnlocked && (
+            <>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try { await getBalances(); } finally { setBusy(false); }
+                }}
+                title="Refresh balances"
+              >
+                <RefreshCw className="mr-1 h-3.5 w-3.5" />
+                {busy ? "Refreshing…" : "Refresh"}
+              </Button>
+
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => lock()}
+                title="Lock wallet"
+              >
+                <Lock className="mr-1 h-3.5 w-3.5" /> Lock
+              </Button>
+            </>
+          )}
+
+          {hasVault && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                // danger: clear local vault
+                localStorage.removeItem("dualchain_encrypted");
+                window.location.reload();
+              }}
+              title="Remove local vault"
+            >
+              <LogOut className="mr-1 h-3.5 w-3.5" /> Remove
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
