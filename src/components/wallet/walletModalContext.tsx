@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
+import { WalletModalCtx } from "./walletContext";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_BASE || "http://localhost:5000").trim();
 
@@ -28,9 +29,9 @@ export type WalletModalContextValue = {
 
   // helpers
   disconnect: () => void;
-};
 
-export const WalletModalCtx = createContext<WalletModalContextValue | null>(null);
+};
+// WalletModalCtx moved to ./walletContext
 
 export function WalletModalProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setOpen] = useState(false);
