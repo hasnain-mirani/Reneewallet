@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Send, ArrowRight, QrCode, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useWalletModal } from "@/components/wallet/useWalletModal";
+import { useWallet } from "@/wallet/store";
 import { ethers } from "ethers";
 
 type NetType = "tron" | "solana" | "evm-native" | "evm-erc20";
@@ -16,17 +16,14 @@ type NetworkOption = {
   value: string;
   label: string;
   type: NetType;
-  balance?: string;
   fee?: string;
-  // EVM specifics:
-  chainId?: number;         // decimal chain id (e.g., 1 for Ethereum mainnet)
-  tokenAddress?: string;    // for evm-erc20
+  chainId?: number;       // EVM chain id (dec) for native/ERC20
+  tokenAddress?: string;  // for evm-erc20
 };
 
-const NETWORKS: NetworkOption[] = [
-  // ✅ EVM: ETH (Ethereum Mainnet)
+const BASE_NETWORKS: NetworkOption[] = [
+  // EVM
   { value: "evm-eth-mainnet", label: "Ethereum (ETH)", type: "evm-native", chainId: 1, fee: "Gas (variable)" },
-  // ✅ EVM: USDT (Ethereum Mainnet)
   {
     value: "evm-usdt-mainnet",
     label: "USDT (Ethereum)",
@@ -35,147 +32,204 @@ const NETWORKS: NetworkOption[] = [
     tokenAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     fee: "Gas (ETH)",
   },
-
-  // 🚫 Non-EVM (inform user they need other wallets)
-  { value: "tron-trx", label: "TRON (TRX)", type: "tron", balance: "—", fee: "≈ 1 TRX" },
-  { value: "sol-sol", label: "Solana (SOL)", type: "solana", balance: "—", fee: "≈ 0.000005 SOL" },
-  { value: "usdt-tron", label: "USDT (TRON)", type: "tron", balance: "—", fee: "≈ 1 TRX" },
-  { value: "usdt-sol", label: "USDT (Solana)", type: "solana", balance: "—", fee: "≈ 0.000005 SOL" },
+  // Built-in wallet chains
+  { value: "tron-trx", label: "TRON (TRX)", type: "tron", fee: "≈ 1 TRX" },
+  { value: "sol-sol", label: "Solana (SOL)", type: "solana", fee: "≈ 0.000005 SOL" },
 ];
 
-/** ---------- EVM helpers (ethers v6) ---------- */
+/* ------------------------- EVM helpers ------------------------- */
+const ERC20_ABI = [
+  "function decimals() view returns (uint8)",
+  "function balanceOf(address owner) view returns (uint256)",
+  "function transfer(address to, uint256 value) returns (bool)",
+];
+
 function getHexChainId(dec: number) {
   return "0x" + dec.toString(16);
 }
 
-async function ensureChain(provider: any, chainIdDec: number) {
+async function ensureChain(ethProvider: any, chainIdDec: number) {
   const targetHex = getHexChainId(chainIdDec);
-  const currentHex: string = await provider.request({ method: "eth_chainId" });
+  const currentHex: string = await ethProvider.request({ method: "eth_chainId" });
   if (currentHex?.toLowerCase() === targetHex.toLowerCase()) return;
 
   try {
-    await provider.request({
+    await ethProvider.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: targetHex }],
     });
-  } catch (e: any) {
-    // If chain not added (4902), you could add it here with wallet_addEthereumChain.
-    // For mainnet, MetaMask already has it, so we rethrow for visibility.
-    throw new Error("Please switch MetaMask to Ethereum Mainnet and try again.");
+  } catch {
+    throw new Error("Please switch MetaMask to the required network and try again.");
   }
 }
 
-async function sendEvmNative(provider: any, to: string, amountEther: string) {
-  const browser = new ethers.BrowserProvider(provider);
+async function sendEvmNative(ethProvider: any, to: string, amountEther: string) {
+  const browser = new ethers.BrowserProvider(ethProvider);
   const signer = await browser.getSigner();
   const tx = await signer.sendTransaction({ to, value: ethers.parseEther(amountEther) });
-  const receipt = await tx.wait();
-  return { hash: tx.hash, receipt };
+  await tx.wait();
+  return tx.hash;
 }
 
-const ERC20_ABI = [
-  "function decimals() view returns (uint8)",
-  "function transfer(address to, uint256 value) returns (bool)",
-];
-
-async function sendEvmErc20(provider: any, tokenAddress: string, to: string, amount: string) {
-  const browser = new ethers.BrowserProvider(provider);
+async function sendEvmErc20(ethProvider: any, tokenAddress: string, to: string, amount: string) {
+  const browser = new ethers.BrowserProvider(ethProvider);
   const signer = await browser.getSigner();
   const c = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
   const decimals: number = Number(await c.decimals());
   const value = ethers.parseUnits(amount, decimals);
   const tx = await c.transfer(to, value);
-  const receipt = await tx.wait();
-  return { hash: tx.hash, receipt };
+  await tx.wait();
+  return tx.hash;
 }
 
-/** ---------- Component ---------- */
-const SendPage = () => {
-  const { toast } = useToast();
-  const { provider, address } = useWalletModal(); // ✅ from your MetaMask context
+async function getEvmNativeBalance(ethProvider: any) {
+  const browser = new ethers.BrowserProvider(ethProvider);
+  const signer = await browser.getSigner();
+  const addr = await signer.getAddress();
+  const bal = await browser.getBalance(addr);
+  return Number(ethers.formatEther(bal)); // ETH
+}
 
+/* ----------------------- Send Page ----------------------- */
+export default function SendPage() {
+  const { toast } = useToast();
+
+  // Built-in wallet (Solana + TRON) store
+  const { encrypted, sol, tron, getBalances, sendSOL, sendTRX } = useWallet();
+
+  // UI state
   const [selectedNetwork, setSelectedNetwork] = useState("");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
+  const [password, setPassword] = useState(""); // needed for Sol/Tron signing
   const [loading, setLoading] = useState(false);
 
-  const selectedNetworkData = NETWORKS.find((n) => n.value === selectedNetwork);
+  // Live balances
+  const [solBal, setSolBal] = useState<number | null>(null); // SOL
+  const [trxBal, setTrxBal] = useState<number | null>(null); // TRX
+  const [ethBal, setEthBal] = useState<number | null>(null); // ETH (MetaMask)
 
-  const handleSend = async () => {
-    if (!selectedNetwork || !recipient || !amount) {
-      toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
-      return;
-    }
+  const selected = useMemo(
+    () => BASE_NETWORKS.find((n) => n.value === selectedNetwork),
+    [selectedNetwork]
+  );
 
-    // Basic address sanity for EVM
-    const isEvm = selectedNetworkData?.type === "evm-native" || selectedNetworkData?.type === "evm-erc20";
-    if (isEvm && !ethers.isAddress(recipient)) {
-      toast({ title: "Invalid EVM address", description: "Please enter a valid 0x… address", variant: "destructive" });
-      return;
-    }
+  // hydrate balances for built-in wallet
+  useEffect(() => {
+    const hasAny = !!(sol?.address || tron?.address);
+    if (!hasAny) return;
+    (async () => {
+      try {
+        const b = await getBalances();
+        setSolBal(b.sol);
+        setTrxBal(b.trx);
+      } catch {
+        // ignore
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sol?.address, tron?.address]);
 
-    // Non-EVM networks need different wallets
-    if (selectedNetworkData?.type === "tron" || selectedNetworkData?.type === "solana") {
-      toast({
-        title: "Unsupported in MetaMask",
-        description: `The ${selectedNetworkData.label} network requires a different wallet (e.g., TronLink for TRON, Phantom for Solana).`,
-        variant: "destructive",
-      });
-      return;
-    }
+  // hydrate ETH when EVM is selected
+  useEffect(() => {
+    if (!selected) return;
+    if (selected.type !== "evm-native" && selected.type !== "evm-erc20") return;
 
-    // Must be connected
-    if (!provider) {
-      toast({ title: "Connect Wallet", description: "Please connect MetaMask first.", variant: "destructive" });
+    const eth = (window as any).ethereum;
+    if (!eth) return;
+    (async () => {
+      try {
+        if (selected.chainId) await ensureChain(eth, selected.chainId);
+        const bal = await getEvmNativeBalance(eth);
+        setEthBal(bal);
+      } catch {
+        // ignore; user can still try send which will prompt
+      }
+    })();
+  }, [selected]);
+
+  // dynamic balances in dropdown
+  const NETWORKS_WITH_BAL = useMemo(() => {
+    return BASE_NETWORKS.map((n) => {
+      if (n.type === "tron" && trxBal != null) {
+        return { ...n, label: `${n.label}`, _balance: `${trxBal.toLocaleString(undefined, { maximumFractionDigits: 6 })} TRX` };
+      }
+      if (n.type === "solana" && solBal != null) {
+        return { ...n, label: `${n.label}`, _balance: `${solBal.toLocaleString(undefined, { maximumFractionDigits: 6 })} SOL` };
+      }
+      if (n.type === "evm-native" && ethBal != null) {
+        return { ...n, label: `${n.label}`, _balance: `${ethBal.toLocaleString(undefined, { maximumFractionDigits: 6 })} ETH` };
+      }
+      return n as any;
+    });
+  }, [trxBal, solBal, ethBal]);
+
+  async function handleSend() {
+    if (!selected || !recipient || !amount) {
+      toast({ title: "Missing info", description: "Please fill in network, recipient and amount.", variant: "destructive" });
       return;
     }
 
     try {
       setLoading(true);
 
-      // Ensure correct chain (Ethereum mainnet for the two examples above)
-      if (selectedNetworkData?.chainId) {
-        await ensureChain(provider, selectedNetworkData.chainId);
-      }
+      if (selected.type === "tron") {
+        // guard
+        if (!encrypted) throw new Error("No wallet found. Create or import first.");
+        if (!tron?.address) throw new Error("Wallet locked. Unlock from the header.");
+        if (!password) throw new Error("Enter your wallet password to sign.");
+        const txid = await sendTRX(recipient.trim(), Number(amount), password);
+        toast({ title: "TRON sent", description: `Tx: ${txid.slice(0, 10)}…${txid.slice(-8)}` });
+      } else if (selected.type === "solana") {
+        if (!encrypted) throw new Error("No wallet found. Create or import first.");
+        if (!sol?.address) throw new Error("Wallet locked. Unlock from the header.");
+        if (!password) throw new Error("Enter your wallet password to sign.");
+        const sig = await sendSOL(recipient.trim(), Number(amount), password);
+        toast({ title: "Solana sent", description: `Sig: ${sig.slice(0, 10)}…${sig.slice(-8)}` });
+      } else if (selected.type === "evm-native" || selected.type === "evm-erc20") {
+        const eth = (window as any).ethereum;
+        if (!eth) throw new Error("MetaMask not detected.");
+        if (selected.chainId) await ensureChain(eth, selected.chainId);
 
-      let txHash = "";
-
-      if (selectedNetworkData?.type === "evm-native") {
-        const { hash } = await sendEvmNative(provider, recipient, amount);
-        txHash = hash;
-      } else if (selectedNetworkData?.type === "evm-erc20") {
-        if (!selectedNetworkData.tokenAddress) {
-          throw new Error("Token address missing for ERC-20 send.");
+        let hash = "";
+        if (selected.type === "evm-native") {
+          // basic EVM address sanity
+          if (!ethers.isAddress(recipient)) throw new Error("Invalid 0x address.");
+          hash = await sendEvmNative(eth, recipient.trim(), amount);
+        } else {
+          if (!ethers.isAddress(recipient)) throw new Error("Invalid 0x address.");
+          if (!selected.tokenAddress) throw new Error("Token address missing for ERC-20.");
+          hash = await sendEvmErc20(eth, selected.tokenAddress, recipient.trim(), amount);
         }
-        const { hash } = await sendEvmErc20(provider, selectedNetworkData.tokenAddress, recipient, amount);
-        txHash = hash;
+        toast({ title: "EVM transaction sent", description: `Hash: ${hash.slice(0, 10)}…${hash.slice(-8)}` });
       }
 
-      toast({
-        title: "Transaction Submitted",
-        description: `Hash: ${txHash.slice(0, 10)}…${txHash.slice(-8)}`,
-      });
-
-      // Reset form
-      setSelectedNetwork("");
-      setRecipient("");
+      // reset minimal fields
       setAmount("");
       setMemo("");
+      setPassword("");
     } catch (e: any) {
-      if (e?.code === 4001) {
-        // user rejected
-        return;
-      }
-      toast({
-        title: "Transaction Failed",
-        description: e?.message || "Please try again.",
-        variant: "destructive",
-      });
+      if (e?.code === 4001) return; // user rejected in MetaMask
+      toast({ title: "Transaction failed", description: e?.message || "Please try again.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  function handleMax() {
+    if (!selected) return;
+    if (selected.type === "tron" && trxBal != null) {
+      // leave a small buffer for fee
+      setAmount(Math.max(trxBal - 1, 0).toString());
+    } else if (selected.type === "solana" && solBal != null) {
+      setAmount(Math.max(solBal - 0.00001, 0).toString());
+    } else if (selected.type === "evm-native" && ethBal != null) {
+      setAmount(Math.max(ethBal - 0.001, 0).toString());
+    } else {
+      // ERC20 max would need token balance query; skipping for brevity
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -202,23 +256,21 @@ const SendPage = () => {
                   <SelectValue placeholder="Choose network and token" />
                 </SelectTrigger>
                 <SelectContent>
-                  {NETWORKS.map((n) => (
+                  {NETWORKS_WITH_BAL.map((n) => (
                     <SelectItem key={n.value} value={n.value}>
                       <div className="flex w-full items-center justify-between">
                         <span>{n.label}</span>
-                        {n.balance && (
-                          <Badge variant="secondary" className="ml-2">
-                            {n.balance}
-                          </Badge>
-                        )}
+                        {"_balance" in n && (n as any)._balance ? (
+                          <Badge variant="secondary" className="ml-2">{(n as any)._balance}</Badge>
+                        ) : null}
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {selectedNetworkData && (
+              {selected && (
                 <div className="text-sm text-muted-foreground">
-                  {selectedNetworkData.fee ? `Network fee: ${selectedNetworkData.fee}` : "Network fee depends on gas"}
+                  {selected.fee ? `Network fee: ${selected.fee}` : "Network fee depends on gas"}
                 </div>
               )}
             </div>
@@ -255,16 +307,13 @@ const SendPage = () => {
                   type="number"
                   className="flex-1"
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAmount("")} // TODO: hook Max to balance
-                >
+                <Button variant="outline" size="sm" onClick={handleMax}>
                   Max
                 </Button>
               </div>
-              {amount && selectedNetworkData && (
-                <div className="text-sm text-muted-foreground">≈ ${(parseFloat(amount || "0") * 100).toFixed(2)} USD</div>
+              {/* Simple USD est placeholder, wire your price feed if needed */}
+              {amount && selected && (
+                <div className="text-sm text-muted-foreground">Amount: {amount} {selected.label.split(" ")[0]}</div>
               )}
             </div>
 
@@ -277,10 +326,34 @@ const SendPage = () => {
                 value={memo}
                 onChange={(e) => setMemo(e.target.value)}
               />
+              {selected?.type === "solana" && (
+                <div className="text-[11px] text-muted-foreground">
+                  (Note: current send uses native SOL transfer. Memo is not yet included.)
+                </div>
+              )}
+              {selected?.type === "tron" && (
+                <div className="text-[11px] text-muted-foreground">
+                  (Note: TRX transfer via TronWeb RPC. Memo/tag not used for native transfers.)
+                </div>
+              )}
             </div>
 
+            {/* Password for Sol/Tron signing */}
+            {(selected?.type === "tron" || selected?.type === "solana") && (
+              <div className="space-y-2">
+                <Label htmlFor="pwd">Wallet Password</Label>
+                <Input
+                  id="pwd"
+                  type="password"
+                  placeholder="Enter your wallet password to sign"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            )}
+
             {/* Transaction Summary */}
-            {selectedNetworkData && amount && (
+            {selected && amount && (
               <Card className="border-border/50 bg-muted/50">
                 <CardContent className="p-4">
                   <h4 className="mb-3 font-medium">Transaction Summary</h4>
@@ -288,17 +361,17 @@ const SendPage = () => {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Amount:</span>
                       <span>
-                        {amount} {selectedNetworkData.label.split(" ")[0]}
+                        {amount} {selected.label.split(" ")[0]}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Network Fee:</span>
-                      <span>{selectedNetworkData.fee ?? "Gas (variable)"}</span>
+                      <span>{selected.fee ?? "Gas (variable)"}</span>
                     </div>
                     <div className="flex justify-between border-t pt-2 font-medium">
                       <span>Total:</span>
                       <span>
-                        {amount} {selectedNetworkData.label.split(" ")[0]} + {selectedNetworkData.fee ?? "Gas"}
+                        {amount} {selected.label.split(" ")[0]} + {selected.fee ?? "Gas"}
                       </span>
                     </div>
                   </div>
@@ -322,6 +395,4 @@ const SendPage = () => {
       </div>
     </div>
   );
-};
-
-export default SendPage;
+}

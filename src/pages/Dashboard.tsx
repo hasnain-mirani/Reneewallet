@@ -18,23 +18,31 @@ function formatUSD(n: number) {
   return n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 }
 
+async function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { sol, tron, getBalances, encrypted } = useWallet();
   const { open: openWalletModal } = useWalletModal();
 
   const [loading, setLoading] = useState(false);
-  const [solBalance, setSolBalance] = useState<number | null>(null); // in SOL
-  const [trxBalance, setTrxBalance] = useState<number | null>(null); // in TRX
+  const [solBalance, setSolBalance] = useState<number | null>(null); // SOL
+  const [trxBalance, setTrxBalance] = useState<number | null>(null); // TRX
   const [prices, setPrices] = useState<Prices>({ solUsd: 0, trxUsd: 0 });
 
-  const isUnlocked = !!(sol?.address || tron?.address);
+  const hasSol = !!sol?.address;
+  const hasTron = !!tron?.address;
+  const isUnlocked = hasSol || hasTron;
   const hasVault = !!encrypted;
 
-  // --- fetch USD prices (Coingecko simple price)
+  // --- fetch USD prices
   async function fetchPrices(): Promise<Prices> {
     try {
-      const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana,tron&vs_currencies=usd");
+      const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana,tron&vs_currencies=usd", {
+        headers: { "Cache-Control": "no-cache" },
+      });
       const j = await r.json();
       return {
         solUsd: j?.solana?.usd ?? 0,
@@ -45,25 +53,36 @@ export default function Dashboard() {
     }
   }
 
-  // --- fetch balances from your backend via store action
+  // --- fetch balances via store (now tolerant to partials)
   async function refreshAll() {
     if (!isUnlocked) return;
     setLoading(true);
     try {
       const [p, b] = await Promise.all([fetchPrices(), getBalances()]);
       setPrices(p);
-      setSolBalance(b.sol);
-      setTrxBalance(b.trx);
+      // b.sol / b.trx are always numbers (0 if missing)
+      setSolBalance(hasSol ? b.sol : null);
+      setTrxBalance(hasTron ? b.trx : null);
     } finally {
       setLoading(false);
     }
   }
 
+  // auto-refresh when addresses appear
   useEffect(() => {
-    // auto-refresh whenever wallet gets unlocked / addresses available
     if (isUnlocked) refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sol?.address, tron?.address]);
+
+  // light polling every 20s while unlocked (keeps UI fresh after sends)
+  useEffect(() => {
+    if (!isUnlocked) return;
+    const id = setInterval(() => {
+      refreshAll();
+    }, 20000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUnlocked]);
 
   const totalUsd = useMemo(() => {
     const solUsd = (solBalance ?? 0) * (prices.solUsd || 0);
@@ -130,7 +149,7 @@ export default function Dashboard() {
                 trxBalance === null ? "— TRX" : `${trxBalance.toLocaleString(undefined, { maximumFractionDigits: 6 })} TRX`
               }
               usdValue={formatUSD((trxBalance ?? 0) * (prices.trxUsd || 0))}
-              change24h={0} // if you have a 24h change API, wire it here
+              change24h={0}
               network="TRON"
             />
           </div>
@@ -152,14 +171,14 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Wallet setup / send panels (these already use real wallet state) */}
+        {/* Panels */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
           <WalletSetup />
           <AddressPanel />
           <SendPanel />
         </div>
 
-        {/* Recent Activity (dynamic placeholder) */}
+        {/* Recent Activity */}
         <Card className="bg-gradient-card border-border/50 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center space-x-2">

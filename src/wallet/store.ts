@@ -76,22 +76,59 @@ export const useWallet = create<State & Actions>((set, get) => ({
   },
 
   lock() { set({}); },
+// replace the whole getBalances() in your Zustand store
+async getBalances() {
+  const st = get();
+  const result: { sol?: number; trx?: number } = {};
 
-  async getBalances() {
-    const st = get();
-    if (!st.sol?.address || !st.tron?.address) throw new Error("Unlock wallet first");
+  // SOL (if we have a Solana address)
+  if (st.sol?.address) {
+    try {
+      const r = await fetch(`${BACKEND}/rpc/solana`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "getBalance",
+          params: [st.sol.address, { commitment: "confirmed" }],
+        }),
+      });
+      const j = await r.json();
+      const lamports = j?.result?.value ?? 0;
+      result.sol = lamports / 1e9;
+    } catch {
+      // keep undefined if rpc hiccups
+    }
+  }
 
-    const sol = await solanaGetBalance(`${BACKEND}/rpc/solana`, st.sol.address);
+  // TRX (if we have a Tron address)
+  if (st.tron?.address) {
+    try {
+      const r = await fetch(`${BACKEND}/rpc/tron/wallet/getaccount`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+        },
+        body: JSON.stringify({ address: st.tron.address }),
+      });
+      const account = await r.json();
+      result.trx = (account?.balance || 0) / 1e6;
+    } catch {
+      // keep undefined
+    }
+  }
 
-    const r = await fetch(`${BACKEND}/rpc/tron/wallet/getaccount`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ address: st.tron.address }),
-    });
-    const account = await r.json();
-    const trx = (account?.balance || 0) / 1e6;
+  // optionally remember last known in store so other pages can read
+  set((s) => ({ ...s, last: { sol: result.sol, trx: result.trx } }));
 
-    return { sol, trx };
-  },
+  // always return an object, even if one side is missing
+  return { sol: result.sol ?? 0, trx: result.trx ?? 0 };
+},
 
   async sendSOL(to, amountSol, password) {
     const enc = get().encrypted; if (!enc) throw new Error("No vault");

@@ -1,37 +1,64 @@
 import { useState } from "react";
 import { useWallet } from "@/wallet/store";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-export default function SendPanel() {
-  const { sendSOL, sendTRX } = useWallet();
+function SendForm({
+  chain,
+  onSend,
+}: {
+  chain: "tron" | "solana";
+  onSend: (to: string, amount: number, pwd: string) => Promise<string>;
+}) {
+  const [to, setTo] = useState("");
+  const [amount, setAmount] = useState("");
   const [pwd, setPwd] = useState("");
-  const [solTo, setSolTo] = useState(""); const [solAmt, setSolAmt] = useState("");
-  const [trxTo, setTrxTo] = useState(""); const [trxAmt, setTrxAmt] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
 
   return (
-    <div className="space-y-4 p-4 border rounded-xl">
-      <h3 className="font-semibold">Send</h3>
+    <div className="space-y-3">
+      <Input placeholder={chain === "tron" ? "Recipient T-address" : "Recipient Solana address"} value={to} onChange={e=>setTo(e.target.value.trim())} />
+      <Input placeholder={chain === "tron" ? "Amount in TRX" : "Amount in SOL"} value={amount} onChange={e=>setAmount(e.target.value)} />
+      <Input type="password" placeholder="Wallet password" value={pwd} onChange={e=>setPwd(e.target.value)} />
+      <Button
+        disabled={busy || !to || !amount || !pwd}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            const txid = await onSend(to, Number(amount), pwd);
+            setResult(txid);
+          } catch (e:any) {
+            alert(e?.message || "Send failed");
+          } finally { setBusy(false); }
+        }}
+      >
+        {busy ? "Sending…" : "Send"}
+      </Button>
+      {result && <div className="text-xs text-muted-foreground break-all">Tx: {result}</div>}
+    </div>
+  );
+}
 
-      <div className="space-y-2">
-        <div className="font-medium">Send SOL</div>
-        <input className="border rounded px-3 py-2 w-full" placeholder="Recipient (Solana)" value={solTo} onChange={e=>setSolTo(e.target.value)} />
-        <input className="border rounded px-3 py-2 w-full" placeholder="Amount (SOL)" value={solAmt} onChange={e=>setSolAmt(e.target.value)} />
-        <input className="border rounded px-3 py-2 w-full" placeholder="Password" type="password" value={pwd} onChange={e=>setPwd(e.target.value)} />
-        <button className="px-3 py-2 bg-black text-white rounded" onClick={async ()=>{
-          const sig = await sendSOL(solTo, parseFloat(solAmt || "0"), pwd || "pass");
-          alert("SOL tx: " + sig);
-        }}>Send SOL</button>
-      </div>
+export default function SendPanel() {
+  const { sendTRX, sendSOL } = useWallet();
+  return (
+    <div className="rounded-2xl border border-border/50 bg-card/60 p-4">
+      <div className="mb-3 text-sm font-semibold">Send</div>
+      <Tabs defaultValue="tron">
+        <TabsList>
+          <TabsTrigger value="tron">TRON</TabsTrigger>
+          <TabsTrigger value="solana">Solana</TabsTrigger>
+        </TabsList>
 
-      <div className="space-y-2">
-        <div className="font-medium">Send TRX</div>
-        <input className="border rounded px-3 py-2 w-full" placeholder="Recipient (TRON)" value={trxTo} onChange={e=>setTrxTo(e.target.value)} />
-        <input className="border rounded px-3 py-2 w-full" placeholder="Amount (TRX)" value={trxAmt} onChange={e=>setTrxAmt(e.target.value)} />
-        <input className="border rounded px-3 py-2 w-full" placeholder="Password" type="password" value={pwd} onChange={e=>setPwd(e.target.value)} />
-        <button className="px-3 py-2 bg-black text-white rounded" onClick={async ()=>{
-          const txid = await sendTRX(trxTo, parseFloat(trxAmt || "0"), pwd || "pass");
-          alert("TRX tx: " + txid);
-        }}>Send TRX</button>
-      </div>
+        <TabsContent value="tron" className="mt-3">
+          <SendForm chain="tron" onSend={(to, amt, pwd) => sendTRX(to, amt, pwd)} />
+        </TabsContent>
+        <TabsContent value="solana" className="mt-3">
+          <SendForm chain="solana" onSend={(to, amt, pwd) => sendSOL(to, amt, pwd)} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
