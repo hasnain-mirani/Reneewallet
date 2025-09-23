@@ -1,0 +1,86 @@
+[
+  {
+    "id": "WLT001",
+    "userId": "USR001",
+    "userName": "Alice Johnson",
+    "address": "0x1A2B3C4D5E6F7890123456789ABCDEF",
+    "currency": "ETH",
+    "balance": 5.847,
+    "balanceUSD": 9234.56,
+    "status": "Active",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "lastTransaction": "2024-09-18T14:22:00Z"
+  },
+  {
+    "id": "WLT002",
+    "userId": "USR001",
+    "userName": "Alice Johnson",
+    "address": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+    "currency": "BTC",
+    "balance": 0.152,
+    "balanceUSD": 9613.09,
+    "status": "Active",
+    "createdAt": "2024-01-20T11:45:00Z",
+    "lastTransaction": "2024-09-17T08:30:00Z"
+  },
+  {
+    "id": "WLT003",
+    "userId": "USR002",
+    "userName": "Bob Chen",
+    "address": "0x7890123456789ABCDEF1A2B3C4D5E6F",
+    "currency": "USDT",
+    "balance": 8934.12,
+    "balanceUSD": 8934.12,
+    "status": "Active",
+    "createdAt": "2024-02-20T09:15:00Z",
+    "lastTransaction": "2024-09-18T12:15:00Z"
+  },
+  {
+    "id": "WLT004",
+    "userId": "USR003",
+    "userName": "Carol Davis",
+    "address": "0xABCDEF1A2B3C4D5E6F7890123456789",
+    "currency": "ETH",
+    "balance": 0.289,
+    "balanceUSD": 456.78,
+    "status": "Frozen",
+    "createdAt": "2024-01-08T14:20:00Z",
+    "lastTransaction": "2024-08-15T11:30:00Z"
+  },
+  {
+    "id": "WLT005",
+    "userId": "USR004",
+    "userName": "David Rodriguez",
+    "address": "bc1qvw3jh2k5l8m9n0p1q2r3s4t5u6v7w8x9y0z",
+    "currency": "BTC",
+    "balance": 0.405,
+    "balanceUSD": 25673.89,
+    "status": "Active",
+    "createdAt": "2023-12-10T08:45:00Z",
+    "lastTransaction": "2024-09-18T13:10:00Z"
+  },
+  {
+    "id": "WLT006",
+    "userId": "USR005",
+    "userName": "Emma Wilson",
+    "address": "0x456789ABCDEF1A2B3C4D5E6F78901234",
+    "currency": "ETH",
+    "balance": 12.156,
+    "balanceUSD": 19234.56,
+    "status": "Active",
+    "createdAt": "2024-03-05T12:00:00Z",
+    "lastTransaction": "2024-09-18T09:15:00Z"
+  },
+  {
+    "id": "WLT007",
+    "userId": "USR006",
+    "userName": "Frank Miller",
+    "address": "0xDEADBEEFCAFEBABE1234567890ABCDEF",
+    "currency": "USDT",
+    "balance": 0.00,
+    "balanceUSD": 0.00,
+    "status": "Frozen",
+    "createdAt": "2024-04-12T15:30:00Z",
+    "lastTransaction": "2024-09-01T10:20:00Z"
+  }
+]

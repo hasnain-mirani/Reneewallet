@@ -1,0 +1,68 @@
+[
+  {
+    "id": "USR001",
+    "name": "Alice Johnson",
+    "email": "alice.johnson@gmail.com",
+    "status": "Active",
+    "role": "Premium User",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "lastLogin": "2024-09-18T14:22:00Z",
+    "walletCount": 3,
+    "totalBalance": 12847.65
+  },
+  {
+    "id": "USR002",
+    "name": "Bob Chen",
+    "email": "bob.chen@yahoo.com",
+    "status": "Active",
+    "role": "Standard User",
+    "createdAt": "2024-02-20T09:15:00Z",
+    "lastLogin": "2024-09-17T16:45:00Z",
+    "walletCount": 2,
+    "totalBalance": 8934.12
+  },
+  {
+    "id": "USR003",
+    "name": "Carol Davis",
+    "email": "carol.davis@outlook.com",
+    "status": "Inactive",
+    "role": "Standard User",
+    "createdAt": "2024-01-08T14:20:00Z",
+    "lastLogin": "2024-08-15T11:30:00Z",
+    "walletCount": 1,
+    "totalBalance": 456.78
+  },
+  {
+    "id": "USR004",
+    "name": "David Rodriguez",
+    "email": "david.rodriguez@gmail.com",
+    "status": "Active",
+    "role": "VIP User",
+    "createdAt": "2023-12-10T08:45:00Z",
+    "lastLogin": "2024-09-18T13:10:00Z",
+    "walletCount": 5,
+    "totalBalance": 25673.89
+  },
+  {
+    "id": "USR005",
+    "name": "Emma Wilson",
+    "email": "emma.wilson@proton.me",
+    "status": "Active",
+    "role": "Premium User",
+    "createdAt": "2024-03-05T12:00:00Z",
+    "lastLogin": "2024-09-18T09:15:00Z",
+    "walletCount": 4,
+    "totalBalance": 19234.56
+  },
+  {
+    "id": "USR006",
+    "name": "Frank Miller",
+    "email": "frank.miller@hotmail.com",
+    "status": "Suspended",
+    "role": "Standard User",
+    "createdAt": "2024-04-12T15:30:00Z",
+    "lastLogin": "2024-09-01T10:20:00Z",
+    "walletCount": 2,
+    "totalBalance": 0.00
+  }
+]

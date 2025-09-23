@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Download, Copy, QrCode, Share2, CheckCircle, PlugZap } from "lucide-react";
+import { Download, Copy, QrCode, Share2, CheckCircle, PlugZap, Unlock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useWalletModal } from "@/components/wallet/useWalletModal";
 import ConnectWalletButton from "@/components/wallet/ConnectWalletButton";
+import { useWallet } from "@/wallet/store";
 import { ethers } from "ethers";
+import { QRCodeSVG } from "qrcode.react";
 
 type NetType = "evm-native" | "evm-erc20" | "tron" | "solana";
 
@@ -19,28 +21,26 @@ type Network = {
   label: string;
   color: string;
   type: NetType;
-  // EVM specifics
-  chainId?: number;
-  tokenAddress?: string; // for evm-erc20 display only
+  chainId?: number;      // EVM
+  tokenAddress?: string; // EVM ERC-20 (display only)
 };
 
-// EVM + Non-EVM choices
 const NETWORKS: Network[] = [
-  { value: "evm-eth-mainnet", label: "Ethereum (ETH)", color: "bg-blue-500", type: "evm-native", chainId: 1 },
+  { value: "evm-eth-mainnet", label: "Ethereum (ETH)",  color: "bg-blue-500",   type: "evm-native", chainId: 1 },
   { value: "evm-usdt-mainnet", label: "USDT (Ethereum)", color: "bg-emerald-500", type: "evm-erc20", chainId: 1, tokenAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
-
-  // Non-EVM (inform user)
-  { value: "tron-trx", label: "TRON (TRX)", color: "bg-red-500", type: "tron" },
-  { value: "usdt-tron", label: "USDT (TRON)", color: "bg-red-500", type: "tron" },
-  { value: "sol-sol", label: "Solana (SOL)", color: "bg-purple-500", type: "solana" },
-  { value: "usdt-sol", label: "USDT (Solana)", color: "bg-purple-500", type: "solana" },
+  { value: "tron-trx", label: "TRON (TRX)",   color: "bg-red-500",    type: "tron"   },
+  { value: "sol-sol",  label: "Solana (SOL)", color: "bg-purple-500", type: "solana" },
 ];
 
 export default function ReceivePage() {
   const { toast } = useToast();
-  const { address, provider, open } = useWalletModal();
 
-  // Default to Ethereum (EVM) since MetaMask is EVM
+  // EVM (MetaMask)
+  const { address: evmAddress, open: openWalletModal } = useWalletModal();
+  // Built-in wallet (Solana + TRON)
+  const { sol, tron, encrypted } = useWallet();
+
+  // default to EVM ETH
   const [selectedNetwork, setSelectedNetwork] = useState<string>("evm-eth-mainnet");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
@@ -51,72 +51,90 @@ export default function ReceivePage() {
     [selectedNetwork]
   );
 
-  // Dynamic address depending on network
+  // pick the correct address source
   const currentAddress = useMemo(() => {
-    if (net.type === "evm-native" || net.type === "evm-erc20") {
-      return address ?? "";
-    }
-    // Demo placeholder addresses for non-EVM (not supported by MetaMask)
-    if (net.type === "tron") return "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE";
-    if (net.type === "solana") return "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM";
+    if (net.type === "evm-native" || net.type === "evm-erc20") return evmAddress ?? "";
+    if (net.type === "tron") return tron?.address ?? "";
+    if (net.type === "solana") return sol?.address ?? "";
     return "";
-  }, [net, address]);
+  }, [net, evmAddress, sol?.address, tron?.address]);
+
+  // build payment URI for QR/share
+  const paymentUri = useMemo(() => {
+    if (!currentAddress) return "";
+
+    const amt = amount.trim();
+    const note = memo.trim();
+
+    if (net.type === "evm-native") {
+      // EIP-681 minimal: ethereum:<addr>@<chainId>?value=<wei>
+      const chain = net.chainId ?? 1;
+      const wei = amt ? ethers.parseEther(amt).toString() : undefined;
+      const qs = new URLSearchParams();
+      if (wei) qs.set("value", wei);
+      return `ethereum:${currentAddress}@${chain}${qs.toString() ? "?" + qs.toString() : ""}`;
+    }
+
+    if (net.type === "evm-erc20") {
+      // For receive, the account address is enough. (Advanced: encode token transfer target.)
+      const chain = net.chainId ?? 1;
+      return `ethereum:${currentAddress}@${chain}`;
+    }
+
+    if (net.type === "solana") {
+      const qs = new URLSearchParams();
+      if (amt) qs.set("amount", amt); // SOL decimal
+      if (note) qs.set("memo", note);
+      return `solana:${currentAddress}${qs.toString() ? "?" + qs.toString() : ""}`;
+    }
+
+    if (net.type === "tron") {
+      const qs = new URLSearchParams();
+      if (amt) qs.set("amount", amt); // TRX decimal
+      return `tron:${currentAddress}${qs.toString() ? "?" + qs.toString() : ""}`;
+    }
+
+    return currentAddress;
+  }, [net, currentAddress, amount, memo]);
+
+  const needsEvmButNotConnected = (net.type === "evm-native" || net.type === "evm-erc20") && !evmAddress;
+  const needsBuiltInButMissing =
+    (net.type === "tron"   && !tron?.address) ||
+    (net.type === "solana" && !sol?.address);
+
+  const wrongEvmFormat =
+    (net.type === "evm-native" || net.type === "evm-erc20") &&
+    evmAddress &&
+    !ethers.isAddress(evmAddress);
 
   const handleCopyAddress = async () => {
     if (!currentAddress) {
-      toast({ title: "No Address", description: "Please connect your wallet first.", variant: "destructive" });
+      toast({ title: "No Address", description: "Connect or unlock your wallet first.", variant: "destructive" });
       return;
     }
     try {
       await navigator.clipboard.writeText(currentAddress);
       setCopied(true);
       toast({ title: "Address Copied", description: "Wallet address copied to clipboard" });
-      setTimeout(() => setCopied(false), 1800);
+      setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast({ title: "Copy Failed", description: "Failed to copy address to clipboard", variant: "destructive" });
+      toast({ title: "Copy Failed", description: "Unable to copy address", variant: "destructive" });
     }
   };
 
   const handleShare = async () => {
     if (!currentAddress) {
-      toast({ title: "No Address", description: "Please connect your wallet first.", variant: "destructive" });
+      toast({ title: "No Address", description: "Connect or unlock your wallet first.", variant: "destructive" });
       return;
     }
-    const label = NETWORKS.find((n) => n.value === selectedNetwork)?.label ?? "Wallet";
+    const label = net.label ?? "Wallet";
     const text = `Send ${label} to: ${currentAddress}${amount ? `\nAmount: ${amount}` : ""}${memo ? `\nNote: ${memo}` : ""}`;
     if (navigator.share) {
-      try {
-        await navigator.share({ title: "InventWallet Address", text });
-      } catch {
-        /* user canceled */
-      }
+      try { await navigator.share({ title: "Receive Address", text, url: paymentUri || undefined }); } catch { /* ignore */ }
     } else {
       await handleCopyAddress();
     }
   };
-
-  const generateQRCode = () => {
-    // Keep as placeholder; can wire a tiny QR lib like `qrcode` later
-    // (or build EIP-681 ethereum: URI for payments).
-    toast({
-      title: "QR Code",
-      description: "QR code generation is coming soon.",
-    });
-  };
-
-  // Helpers for info box
-  const confirmations =
-    net.type === "tron" ? "1" : net.type === "solana" ? "1" : "1–2";
-  const eta =
-    net.type === "tron" ? "~3 seconds" : net.type === "solana" ? "~400 ms" : "~12–30 seconds";
-
-  const needsEvmButNotConnected =
-    (net.type === "evm-native" || net.type === "evm-erc20") && !address;
-
-  const wrongEvmFormat =
-    (net.type === "evm-native" || net.type === "evm-erc20") &&
-    address &&
-    !ethers.isAddress(address);
 
   return (
     <div className="min-h-screen bg-background">
@@ -148,9 +166,9 @@ export default function ReceivePage() {
                       <div className="flex items-center space-x-3">
                         <div className={`w-4 h-4 ${n.color} rounded-full`} />
                         <span>{n.label}</span>
-                        {(n.type === "tron" || n.type === "solana") && (
-                          <Badge className="ml-2" variant="destructive">Not via MetaMask</Badge>
-                        )}
+                        {n.type === "tron" || n.type === "solana" ? (
+                          <Badge className="ml-2" variant="secondary">Built-in wallet</Badge>
+                        ) : null}
                       </div>
                     </SelectItem>
                   ))}
@@ -158,11 +176,11 @@ export default function ReceivePage() {
               </Select>
             </div>
 
-            {/* Connect hint for EVM */}
+            {/* Hints */}
             {needsEvmButNotConnected && (
               <div className="flex items-center justify-between rounded-lg border border-border/60 bg-card/50 p-3">
                 <div className="text-sm text-muted-foreground">
-                  Connect MetaMask to view your {net.label} receive address.
+                  Connect MetaMask to view your {net.label} address.
                 </div>
                 <ConnectWalletButton size="sm" className="gap-2">
                   <PlugZap className="h-4 w-4" />
@@ -171,18 +189,47 @@ export default function ReceivePage() {
               </div>
             )}
 
-            {/* QR Code Section */}
+            {needsBuiltInButMissing && (
+              <div className="flex items-center justify-between rounded-lg border border-border/60 bg-card/50 p-3">
+                <div className="text-sm text-muted-foreground">
+                  Create/Unlock your built-in wallet to view your {net.label} address.
+                </div>
+                <Button size="sm" variant="secondary" onClick={openWalletModal} className="gap-2">
+                  <Unlock className="h-4 w-4" />
+                  Open Wallet
+                </Button>
+              </div>
+            )}
+
+            {/* QR Code */}
             <Card className="bg-muted/50 border-border/50">
               <CardContent className="p-6 text-center">
-                <div className="w-48 h-48 bg-white border-2 border-border rounded-lg mx-auto mb-4 flex items-center justify-center">
-                  <QrCode className="w-24 h-24 text-muted-foreground" />
+                <div
+                  className="rounded-lg bg-white border-2 border-border mx-auto mb-4 flex items-center justify-center"
+                  style={{ width: 192, height: 192 }}
+                >
+                  {currentAddress ? (
+                    <QRCodeSVG value={paymentUri || currentAddress} size={176} />
+                  ) : (
+                    <QrCode className="w-24 h-24 text-muted-foreground" />
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Scan this QR code to get the wallet address
+                  {currentAddress ? "Scan to pay" : "Connect / Unlock to show your QR"}
                 </p>
-                <Button variant="outline" onClick={generateQRCode} className="w-full">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (!currentAddress) {
+                      toast({ title: "No Address", description: "Connect or unlock your wallet first.", variant: "destructive" });
+                      return;
+                    }
+                    toast({ title: "QR ready", description: "The QR above can be scanned now." });
+                  }}
+                  className="w-full"
+                >
                   <QrCode className="w-4 h-4 mr-2" />
-                  Generate QR Code
+                  Show QR Code
                 </Button>
               </CardContent>
             </Card>
@@ -194,7 +241,11 @@ export default function ReceivePage() {
                 <Input
                   value={currentAddress || ""}
                   readOnly
-                  placeholder={needsEvmButNotConnected ? "Connect MetaMask to see your address" : "Address unavailable"}
+                  placeholder={
+                    needsEvmButNotConnected || needsBuiltInButMissing
+                      ? "Connect or Unlock to see your address"
+                      : "Address unavailable"
+                  }
                   className="bg-muted font-mono text-sm"
                 />
                 <Button variant="outline" onClick={handleCopyAddress} className="px-3 flex-shrink-0">
@@ -204,17 +255,11 @@ export default function ReceivePage() {
                   <Share2 className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Only send {net.label} to this address.
-              </p>
+              <p className="text-xs text-muted-foreground">Only send {net.label} to this address.</p>
 
               {wrongEvmFormat && (
-                <p className="text-xs text-red-500">The connected address is not a valid EVM address.</p>
-              )}
-
-              {(net.type === "tron" || net.type === "solana") && (
-                <p className="text-xs text-yellow-500">
-                  Tip: Use TronLink for TRON or Phantom for Solana to receive on those networks.
+                <p className="text-xs text-red-500">
+                  The connected address is not a valid EVM address.
                 </p>
               )}
             </div>
@@ -230,7 +275,7 @@ export default function ReceivePage() {
                 type="number"
               />
               <p className="text-xs text-muted-foreground">
-                Specify an amount to help the sender know how much to send
+                Many wallets will prefill the amount from this QR.
               </p>
             </div>
 
@@ -256,11 +301,11 @@ export default function ReceivePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Confirmations:</span>
-                    <span>{confirmations} required</span>
+                    <span>{net.type === "tron" ? "1" : net.type === "solana" ? "1" : "1–2"} required</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Estimated time:</span>
-                    <span>{eta}</span>
+                    <span>{net.type === "tron" ? "~3 seconds" : net.type === "solana" ? "~400 ms" : "~12–30 seconds"}</span>
                   </div>
                 </div>
               </CardContent>

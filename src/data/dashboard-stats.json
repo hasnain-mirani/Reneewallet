@@ -1,0 +1,51 @@
+{
+  "kpis": {
+    "totalUsers": {
+      "value": 1247,
+      "change": "+12.5%",
+      "trend": "up"
+    },
+    "activeWallets": {
+      "value": 3956,
+      "change": "+8.3%",
+      "trend": "up"
+    },
+    "dailyVolume": {
+      "value": "$2,847,392",
+      "change": "-3.2%",
+      "trend": "down"
+    },
+    "totalRevenue": {
+      "value": "$485,623",
+      "change": "+15.7%",
+      "trend": "up"
+    }
+  },
+  "userGrowth": [
+    { "month": "Jan", "users": 650 },
+    { "month": "Feb", "users": 745 },
+    { "month": "Mar", "users": 823 },
+    { "month": "Apr", "users": 891 },
+    { "month": "May", "users": 967 },
+    { "month": "Jun", "users": 1045 },
+    { "month": "Jul", "users": 1123 },
+    { "month": "Aug", "users": 1189 },
+    { "month": "Sep", "users": 1247 }
+  ],
+  "walletBalances": [
+    { "month": "Jan", "balance": 12500000 },
+    { "month": "Feb", "balance": 15200000 },
+    { "month": "Mar", "balance": 18700000 },
+    { "month": "Apr", "balance": 21300000 },
+    { "month": "May", "balance": 24800000 },
+    { "month": "Jun", "balance": 28400000 },
+    { "month": "Jul", "balance": 32100000 },
+    { "month": "Aug", "balance": 35900000 },
+    { "month": "Sep", "balance": 39600000 }
+  ],
+  "transactionStatus": [
+    { "name": "Success", "value": 8547, "color": "#10b981" },
+    { "name": "Pending", "value": 234, "color": "#f59e0b" },
+    { "name": "Failed", "value": 189, "color": "#ef4444" }
+  ]
+}

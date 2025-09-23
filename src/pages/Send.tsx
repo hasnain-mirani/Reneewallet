@@ -1,3 +1,4 @@
+// src/pages/Send.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,8 @@ type NetworkOption = {
   label: string;
   type: NetType;
   fee?: string;
-  chainId?: number;       // EVM chain id (dec) for native/ERC20
-  tokenAddress?: string;  // for evm-erc20
+  chainId?: number;
+  tokenAddress?: string;
 };
 
 const BASE_NETWORKS: NetworkOption[] = [
@@ -37,12 +38,14 @@ const BASE_NETWORKS: NetworkOption[] = [
   { value: "sol-sol", label: "Solana (SOL)", type: "solana", fee: "≈ 0.000005 SOL" },
 ];
 
-/* ------------------------- EVM helpers ------------------------- */
+/* ------------------------- helpers ------------------------- */
 const ERC20_ABI = [
   "function decimals() view returns (uint8)",
   "function balanceOf(address owner) view returns (uint256)",
   "function transfer(address to, uint256 value) returns (bool)",
 ];
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function getHexChainId(dec: number) {
   return "0x" + dec.toString(16);
@@ -52,12 +55,8 @@ async function ensureChain(ethProvider: any, chainIdDec: number) {
   const targetHex = getHexChainId(chainIdDec);
   const currentHex: string = await ethProvider.request({ method: "eth_chainId" });
   if (currentHex?.toLowerCase() === targetHex.toLowerCase()) return;
-
   try {
-    await ethProvider.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: targetHex }],
-    });
+    await ethProvider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: targetHex }] });
   } catch {
     throw new Error("Please switch MetaMask to the required network and try again.");
   }
@@ -87,28 +86,34 @@ async function getEvmNativeBalance(ethProvider: any) {
   const signer = await browser.getSigner();
   const addr = await signer.getAddress();
   const bal = await browser.getBalance(addr);
-  return Number(ethers.formatEther(bal)); // ETH
+  return Number(ethers.formatEther(bal));
 }
 
-/* ----------------------- Send Page ----------------------- */
+/* --------- lightweight address validators (client-side) --------- */
+function isValidTron(addr: string) {
+  // TRON mainnet base58check addresses usually: 34 chars, start with 'T'
+  return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(addr.trim());
+}
+function isValidSol(addr: string) {
+  // Solana base58, 32-44 chars (pubkeys are 44), no 0/O/I/l
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr.trim());
+}
+
+/* ----------------------- Component ----------------------- */
 export default function SendPage() {
   const { toast } = useToast();
-
-  // Built-in wallet (Solana + TRON) store
   const { encrypted, sol, tron, getBalances, sendSOL, sendTRX } = useWallet();
 
-  // UI state
   const [selectedNetwork, setSelectedNetwork] = useState("");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
-  const [password, setPassword] = useState(""); // needed for Sol/Tron signing
+  const [password, setPassword] = useState(""); // for Sol/Tron
   const [loading, setLoading] = useState(false);
 
-  // Live balances
-  const [solBal, setSolBal] = useState<number | null>(null); // SOL
-  const [trxBal, setTrxBal] = useState<number | null>(null); // TRX
-  const [ethBal, setEthBal] = useState<number | null>(null); // ETH (MetaMask)
+  const [solBal, setSolBal] = useState<number | null>(null);
+  const [trxBal, setTrxBal] = useState<number | null>(null);
+  const [ethBal, setEthBal] = useState<number | null>(null);
 
   const selected = useMemo(
     () => BASE_NETWORKS.find((n) => n.value === selectedNetwork),
@@ -135,7 +140,6 @@ export default function SendPage() {
   useEffect(() => {
     if (!selected) return;
     if (selected.type !== "evm-native" && selected.type !== "evm-erc20") return;
-
     const eth = (window as any).ethereum;
     if (!eth) return;
     (async () => {
@@ -144,12 +148,11 @@ export default function SendPage() {
         const bal = await getEvmNativeBalance(eth);
         setEthBal(bal);
       } catch {
-        // ignore; user can still try send which will prompt
+        // ignore
       }
     })();
   }, [selected]);
 
-  // dynamic balances in dropdown
   const NETWORKS_WITH_BAL = useMemo(() => {
     return BASE_NETWORKS.map((n) => {
       if (n.type === "tron" && trxBal != null) {
@@ -171,22 +174,55 @@ export default function SendPage() {
       return;
     }
 
+    // per-chain recipient validation
+    if (selected.type === "tron" && !isValidTron(recipient)) {
+      toast({ title: "Invalid TRON address", description: "TRON addresses start with T and are 34 chars.", variant: "destructive" });
+      return;
+    }
+    if (selected.type === "solana" && !isValidSol(recipient)) {
+      toast({ title: "Invalid Solana address", description: "Enter a valid base58 Solana address.", variant: "destructive" });
+      return;
+    }
+    if ((selected.type === "evm-native" || selected.type === "evm-erc20") && !ethers.isAddress(recipient)) {
+      toast({ title: "Invalid EVM address", description: "Enter a valid 0x… address.", variant: "destructive" });
+      return;
+    }
+
     try {
       setLoading(true);
 
       if (selected.type === "tron") {
-        // guard
         if (!encrypted) throw new Error("No wallet found. Create or import first.");
         if (!tron?.address) throw new Error("Wallet locked. Unlock from the header.");
         if (!password) throw new Error("Enter your wallet password to sign.");
         const txid = await sendTRX(recipient.trim(), Number(amount), password);
         toast({ title: "TRON sent", description: `Tx: ${txid.slice(0, 10)}…${txid.slice(-8)}` });
+
+        // poll balances (TRON)
+        for (let i = 0; i < 5; i++) {
+          await sleep(1500);
+          try {
+            const b = await getBalances();
+            setTrxBal(b.trx);
+            break;
+          } catch {}
+        }
       } else if (selected.type === "solana") {
         if (!encrypted) throw new Error("No wallet found. Create or import first.");
         if (!sol?.address) throw new Error("Wallet locked. Unlock from the header.");
         if (!password) throw new Error("Enter your wallet password to sign.");
         const sig = await sendSOL(recipient.trim(), Number(amount), password);
         toast({ title: "Solana sent", description: `Sig: ${sig.slice(0, 10)}…${sig.slice(-8)}` });
+
+        // poll balances (Solana)
+        for (let i = 0; i < 5; i++) {
+          await sleep(1200);
+          try {
+            const b = await getBalances();
+            setSolBal(b.sol);
+            break;
+          } catch {}
+        }
       } else if (selected.type === "evm-native" || selected.type === "evm-erc20") {
         const eth = (window as any).ethereum;
         if (!eth) throw new Error("MetaMask not detected.");
@@ -194,15 +230,20 @@ export default function SendPage() {
 
         let hash = "";
         if (selected.type === "evm-native") {
-          // basic EVM address sanity
-          if (!ethers.isAddress(recipient)) throw new Error("Invalid 0x address.");
           hash = await sendEvmNative(eth, recipient.trim(), amount);
         } else {
-          if (!ethers.isAddress(recipient)) throw new Error("Invalid 0x address.");
           if (!selected.tokenAddress) throw new Error("Token address missing for ERC-20.");
           hash = await sendEvmErc20(eth, selected.tokenAddress, recipient.trim(), amount);
         }
         toast({ title: "EVM transaction sent", description: `Hash: ${hash.slice(0, 10)}…${hash.slice(-8)}` });
+
+        // refresh EVM native balance snapshot if that was selected
+        if (selected.type === "evm-native") {
+          try {
+            const bal = await getEvmNativeBalance(eth);
+            setEthBal(bal);
+          } catch {}
+        }
       }
 
       // reset minimal fields
@@ -210,7 +251,7 @@ export default function SendPage() {
       setMemo("");
       setPassword("");
     } catch (e: any) {
-      if (e?.code === 4001) return; // user rejected in MetaMask
+      if (e?.code === 4001) return; // user rejected
       toast({ title: "Transaction failed", description: e?.message || "Please try again.", variant: "destructive" });
     } finally {
       setLoading(false);
@@ -220,14 +261,13 @@ export default function SendPage() {
   function handleMax() {
     if (!selected) return;
     if (selected.type === "tron" && trxBal != null) {
-      // leave a small buffer for fee
-      setAmount(Math.max(trxBal - 1, 0).toString());
+      setAmount(Math.max(trxBal - 1, 0).toString()); // leave ~1 TRX for fee
     } else if (selected.type === "solana" && solBal != null) {
-      setAmount(Math.max(solBal - 0.00001, 0).toString());
+      setAmount(Math.max(solBal - 0.00001, 0).toString()); // tiny fee buffer
     } else if (selected.type === "evm-native" && ethBal != null) {
-      setAmount(Math.max(ethBal - 0.001, 0).toString());
+      setAmount(Math.max(ethBal - 0.001, 0).toString()); // gas buffer
     } else {
-      // ERC20 max would need token balance query; skipping for brevity
+      // ERC20 max would need token balance query (not added here)
     }
   }
 
@@ -311,7 +351,6 @@ export default function SendPage() {
                   Max
                 </Button>
               </div>
-              {/* Simple USD est placeholder, wire your price feed if needed */}
               {amount && selected && (
                 <div className="text-sm text-muted-foreground">Amount: {amount} {selected.label.split(" ")[0]}</div>
               )}
@@ -333,7 +372,7 @@ export default function SendPage() {
               )}
               {selected?.type === "tron" && (
                 <div className="text-[11px] text-muted-foreground">
-                  (Note: TRX transfer via TronWeb RPC. Memo/tag not used for native transfers.)
+                  (Note: TRX transfer via RPC. Memo/tag not used for native transfers.)
                 </div>
               )}
             </div>
