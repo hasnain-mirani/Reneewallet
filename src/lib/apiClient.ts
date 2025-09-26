@@ -11,6 +11,11 @@ export type ApiOptions = {
 const BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, "") ||
   "http://localhost:5000/api";
+  // after const BASE_URL = ...
+if (typeof window !== 'undefined') {
+  (window as any).__API_BASE__ = BASE_URL;
+}
+
 
 function buildUrl(path: string) {
   return `${BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
