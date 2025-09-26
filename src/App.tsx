@@ -44,7 +44,7 @@ function AppShell() {
         <Routes>
           {/* Public */}
           <Route path="/" element={<Landing />} />
-          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/portfolio" element={<Dashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/staking" element={<Staking />} />
           <Route path="/send" element={<SendPage />} />

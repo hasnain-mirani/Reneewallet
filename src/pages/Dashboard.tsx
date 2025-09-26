@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import WalletCard from "@/components/ui/WalletCard";
 import ActionButton from "@/components/ui/ActionButton";
-import { Send, Download, ArrowUpDown, Plus, TrendingUp, Activity, RefreshCw } from "lucide-react";
+import { Send, Download, ArrowUpDown, Plus, Activity, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AddressPanel from "@/components/wallet-ui/AddressPanel";
 import SendPanel from "@/components/wallet-ui/SendPanel";
@@ -11,6 +11,7 @@ import WalletSetup from "@/components/wallet-ui/WalletSetup";
 import { useWallet } from "@/wallet/store";
 import AddressPill from "@/components/wallet/AddressPill";
 import { useWalletModal } from "@/components/wallet/useWalletModal";
+import { apiFetch } from "@/lib/apiClient"; // ⬅️ use relative /api through your backend
 
 type Prices = { solUsd: number; trxUsd: number };
 
@@ -18,13 +19,10 @@ function formatUSD(n: number) {
   return n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 }
 
-async function sleep(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { sol, tron, getBalances, encrypted } = useWallet();
+  // NOTE: we no longer use store.getBalances (it was hitting absolute HTTP somewhere).
+  const { sol, tron, encrypted } = useWallet();
   const { open: openWalletModal } = useWalletModal();
 
   const [loading, setLoading] = useState(false);
@@ -37,30 +35,70 @@ export default function Dashboard() {
   const isUnlocked = hasSol || hasTron;
   const hasVault = !!encrypted;
 
-  // --- fetch USD prices
+  // --- prices via backend proxy to avoid CORS/rate-limit problems
   async function fetchPrices(): Promise<Prices> {
     try {
-      const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana,tron&vs_currencies=usd", {
-        headers: { "Cache-Control": "no-cache" },
-      });
-      const j = await r.json();
+      // Your Nginx/Vercel proxy should forward this to CoinGecko:
+      // /api/market/prices?ids=solana,tron&vs=usd
+      const j = await apiFetch<any>("/market/prices?ids=solana,tron&vs=usd");
       return {
-        solUsd: j?.solana?.usd ?? 0,
-        trxUsd: j?.tron?.usd ?? 0,
+        solUsd: Number(j?.solana?.usd ?? 0),
+        trxUsd: Number(j?.tron?.usd ?? 0),
       };
     } catch {
       return { solUsd: 0, trxUsd: 0 };
     }
   }
 
-  // --- fetch balances via store (now tolerant to partials)
+  // --- balances via your backend (relative paths = HTTPS-safe on Vercel)
+  async function getBalancesViaApi() {
+    let solBal = 0;
+    let trxBal = 0;
+
+    const jobs: Promise<void>[] = [];
+
+    if (hasSol && sol?.address) {
+      jobs.push(
+        apiFetch<any>("/rpc/solana", {
+          method: "POST",
+          body: { method: "getBalance", params: [sol.address] },
+        })
+          .then((r) => {
+            // Standard JSON-RPC getBalance => { result: { value: lamports } }
+            const lamports =
+              Number(r?.result?.value ?? r?.value ?? r?.lamports ?? 0) || 0;
+            solBal = lamports / 1e9; // lamports -> SOL
+          })
+          .catch(() => {})
+      );
+    }
+
+    if (hasTron && tron?.address) {
+      jobs.push(
+        apiFetch<any>("/rpc/tron/wallet/getaccount", {
+          method: "POST",
+          body: { address: tron.address },
+        })
+          .then((r) => {
+            // TronGrid style returns balance in SUN
+            const sun = Number(r?.balance ?? r?.data?.balance ?? r?.result?.balance ?? 0) || 0;
+            trxBal = sun / 1e6; // SUN -> TRX
+          })
+          .catch(() => {})
+      );
+    }
+
+    await Promise.all(jobs);
+    return { sol: solBal, trx: trxBal };
+  }
+
+  // --- refresh both prices + balances
   async function refreshAll() {
     if (!isUnlocked) return;
     setLoading(true);
     try {
-      const [p, b] = await Promise.all([fetchPrices(), getBalances()]);
+      const [p, b] = await Promise.all([fetchPrices(), getBalancesViaApi()]);
       setPrices(p);
-      // b.sol / b.trx are always numbers (0 if missing)
       setSolBalance(hasSol ? b.sol : null);
       setTrxBalance(hasTron ? b.trx : null);
     } finally {
@@ -74,7 +112,7 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sol?.address, tron?.address]);
 
-  // light polling every 20s while unlocked (keeps UI fresh after sends)
+  // light polling every 20s while unlocked
   useEffect(() => {
     if (!isUnlocked) return;
     const id = setInterval(() => {
@@ -136,7 +174,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Wallet Cards (dynamic) */}
+        {/* Wallet Cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* TRON */}
           <div className="space-y-2">
