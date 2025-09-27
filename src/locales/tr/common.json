@@ -1,0 +1,394 @@
+{
+    
+  "nav": {
+    "portfolio": "Portföy",
+    "staking": "Stake",
+    "trade": "Ticaret",
+    "swap": "Takas",
+    "send": "Gönder",
+    "buy": "Satın Al",
+    "deposit": "Yatır",
+    "rewards": "Ödüller",
+    "reneeFest": "Renee Wallet Fest",
+    "new": "YENİ",
+    "openMenu": "Menüyü aç",
+    "closeMenu": "Menüyü kapat"
+  }
+,
+
+    
+  "send": {
+    "title": "Kripto Gönder",
+    "subtitle": "Kriptonuzu herhangi bir cüzdan adresine gönderin",
+    "cardTitle": "İşlem Gönder",
+    "selectNetwork": "Ağ ve Token Seçin",
+    "chooseNetwork": "Ağ ve token seçin",
+    "networkFee": "Ağ ücreti: {{fee}}",
+    "networkFeeGas": "Ağ ücreti gaza bağlıdır",
+    "recipient": "Alıcı Adresi",
+    "recipientPlaceholder": "Cüzdan adresi girin",
+    "scanQrSoon": "QR tara (yakında)",
+    "addressBookSoon": "Adres defteri (yakında)",
+    "amount": "Tutar",
+    "max": "Maks",
+    "amountLabel": "Tutar: {{amount}} {{sym}}",
+    "memo": "Açıklama (İsteğe bağlı)",
+    "memoPlaceholder": "Bu işlem için bir not ekleyin",
+    "noteSol": "(Not: şu an yerel SOL transferi kullanılıyor. Açıklama henüz eklenmiyor.)",
+    "noteTrx": "(Not: TRX transferi RPC ile yapılır. Yerel transferlerde memo/tag kullanılmaz.)",
+    "walletPassword": "Cüzdan Şifresi",
+    "passwordPlaceholder": "İmzalamak için cüzdan şifrenizi girin",
+    "summary": {
+      "title": "İşlem Özeti",
+      "amount": "Tutar:",
+      "fee": "Ağ Ücreti:",
+      "total": "Toplam:"
+    },
+    "gasVariable": "Gaz (değişken)",
+    "gas": "Gaz",
+    "cta": "İşlemi Gönder",
+    "sending": "Gönderiliyor…",
+    "toast": {
+      "missing": { "title": "Eksik bilgi", "desc": "Ağ, alıcı ve tutarı doldurun." },
+      "badTron": { "title": "Geçersiz TRON adresi", "desc": "TRON adresleri T ile başlar ve 34 karakterdir." },
+      "badSol": { "title": "Geçersiz Solana adresi", "desc": "Geçerli bir base58 Solana adresi girin." },
+      "badEvm": { "title": "Geçersiz EVM adresi", "desc": "Geçerli bir 0x… adresi girin." },
+      "tronSent": { "title": "TRON gönderildi", "desc": "Tx: {{tx}}" },
+      "solSent": { "title": "Solana gönderildi", "desc": "İmza: {{sig}}" },
+      "evmSent": { "title": "EVM işlemi gönderildi", "desc": "Hash: {{hash}}" },
+      "failed": { "title": "İşlem başarısız", "desc": "Lütfen tekrar deneyin." }
+    },
+    "errors": {
+      "noWallet": "Cüzdan bulunamadı. Önce oluşturun ya da içe aktarın.",
+      "locked": "Cüzdan kilitli. Üst menüden kilidi açın.",
+      "needPassword": "İmzalamak için cüzdan şifresini girin.",
+      "noMetamask": "MetaMask algılanmadı."
+    }
+  }
+,
+    
+  "actions": { "connectWallet": "Cüzdanı Bağla" },
+  "convert": {
+    "title": "Dönüştür ve Satın Al",
+    "subtitle": "Doğrudan Uniswap v3 ile takas (3. parti toplayıcı yok)",
+    "cardTitle": "Token Dönüşümü",
+    "from": "Kaynak",
+    "to": "Hedef",
+    "selectToken": "Token seçin",
+    "swapTokens": "Tokenleri değiştir",
+    "convertTokens": "Tokenleri Dönüştür",
+    "availableViaCard": "Kart ile kullanılabilir",
+    "connectHintMetaMask": "Ethereum üzerinde takas yapmak için MetaMask bağlayın.",
+    "toast": {
+      "missing": { "title": "Eksik bilgi", "desc": "Tüm alanları doldurun" },
+      "onramp": { "title": "On-ramp", "desc": "Ödeme sağlayıcınızı burada açın." },
+      "notsupported": {
+        "title": "Burada desteklenmiyor",
+        "desc": "Bu demo yalnızca Ethereum üzerinde ETH ↔ USDT takasını yapar (Uniswap v3)."
+      },
+      "needWallet": { "title": "Cüzdan bağlayın", "desc": "Lütfen önce MetaMask bağlayın." },
+      "failed": { "title": "Takas başarısız", "desc": "Tekrar deneyin." }
+    }
+  }
+,
+
+   
+  "actions": {
+    "connectWallet": "Cüzdanı Bağla"
+  },
+  "wallet": {
+    "connected": "Bağlandı",
+    "connectedTitle": "Cüzdan bağlı",
+    "connectErrorTitle": "Bağlantı başarısız",
+    "connectErrorDesc": "Lütfen tekrar deneyin."
+  }
+,
+ 
+  "staking": {
+    "hero": {
+      "stakedCount": "{{count}} token stake edildi"
+    },
+    "banner": {
+      "title": "Renee Wallet",
+      "desc": "Desteklenen varlıkları stake ederek ödüller kazanın",
+      "tag": "Staking",
+      "secureTitle": "Güvenli ve Saklama Hizmeti Yok",
+      "secureDesc": "Zincir üstü ödüller kazanırken anahtarlar sizde kalır"
+    },
+    "cards": {
+      "totalValue": "Toplam stake değeri",
+      "claimable": "Talep edilebilir ödüller"
+    },
+    "actions": {
+      "stake": "Stake Et",
+      "unstake": "Stake'i Çöz",
+      "redelegate": "Yeniden Yönlendir",
+      "claim": "Talep Et"
+    },
+    "tabs": {
+      "delegations": "Delegasyonlarım",
+      "unstaking": "Çözülme sürecinde"
+    },
+    "search": {
+      "placeholder": "Token adına veya adrese göre ara"
+    },
+    "filters": {
+      "chain": {
+        "placeholder": "Tüm ağlar",
+        "all": "Tüm ağlar"
+      }
+    },
+    "table": {
+      "title": "Stake pozisyonları",
+      "subtitle": "Delegasyonlarınız ve token başına APR",
+      "columns": {
+        "token": "Token",
+        "apr": "APR",
+        "staked": "Stake miktarı"
+      }
+    },
+    "empty": "Henüz token stake etmediniz"
+  }
+,
+
+    
+  "notFound": {
+    "message": "Üzgünüz! Sayfa bulunamadı",
+    "backHome": "Ana sayfaya dön"
+  },
+
+
+  "receive": {
+    "title": "Kripto Al",
+    "subtitle": "Ödemeleri almak için cüzdan adresinizi paylaşın",
+    "sectionTitle": "Alım Adresi",
+    "badges": { "builtin": "Yerleşik cüzdan" },
+    "hints": {
+      "connectEvm": "MetaMask bağlayarak {{label}} adresinizi görüntüleyin.",
+      "unlockBuiltIn": "Yerleşik cüzdanınızı oluşturun/kilidini açın ve {{label}} adresinizi görün."
+    },
+    "actions": { "openWallet": "Cüzdanı Aç" },
+    "form": {
+      "selectNetwork": "Ağ ve Token Seçin",
+      "chooseNetwork": "Ağ ve token seçin",
+      "addressLabel": "Cüzdan Adresi",
+      "addressPlaceholderLocked": "Adresi görmek için Bağlayın/Kilidi Açın",
+      "addressPlaceholderEmpty": "Adres kullanılamıyor",
+      "sendOnly": "Bu adrese yalnızca {{label}} gönderin.",
+      "expectedAmount": "Beklenen Tutar (İsteğe bağlı)",
+      "amountHint": "Birçok cüzdan bu QR'den tutarı otomatik doldurur. (Her cüzdan token tutarını desteklemez.)",
+      "memoOpt": "Açıklama/Not (İsteğe bağlı)",
+      "memoPlaceholder": "Bu işlem için bir not ekleyin",
+      "amount": "Tutar",
+      "memo": "Not"
+    },
+    "qr": {
+      "scanToPay": "Ödemek için tarayın",
+      "connectToShow": "QR kodu göstermek için Bağlayın/Kilidi Açın",
+      "readyTitle": "QR hazır",
+      "readyDesc": "Yukarıdaki QR şimdi taranabilir.",
+      "showBtn": "QR Kodunu Göster"
+    },
+    "share": {
+      "title": "Alım Adresi",
+      "sendTo": "Gönder",
+      "to": "adresi"
+    },
+    "toast": {
+      "noAddress": { "title": "Adres Yok", "desc": "Önce cüzdanınızı bağlayın veya kilidini açın." },
+      "addrCopied": { "title": "Adres Kopyalandı", "desc": "Cüzdan adresi panoya kopyalandı" },
+      "tokenCopied": { "title": "Token Sözleşmesi Kopyalandı" },
+      "copyFail": { "title": "Kopyalama Başarısız", "addr": "Adres kopyalanamadı", "token": "Token sözleşmesi kopyalanamadı" }
+    },
+    "errors": {
+      "badEvm": "Bağlı adres geçerli bir EVM adresi değil.",
+      "badTron": "Yerleşik adres geçerli bir TRON Base58 adresi (T…) gibi görünmüyor."
+    },
+    "trc20": {
+      "infoLine": "Bu, TRON üzerinde USDT (TRC20) isteğidir. Gönderen cüzdanında USDT TRC20 tokenını seçmelidir.",
+      "contractLabel": "USDT (TRC20) Sözleşmesi",
+      "copyContract": "Sözleşmeyi kopyala",
+      "pasteHint": "Doğru tokenın gönderildiğinden emin olmak için bazı cüzdanlar sözleşmeyi yapıştırmanıza izin verir.",
+      "trxNote": "Ağ ücretleri nedeniyle USDT (TRC20) almak/göndermek için cüzdanınızda biraz TRX bulundurmanız gerekir.",
+      "tokenLine": "Token",
+      "contract": "Sözleşme"
+    },
+    "info": {
+      "title": "Önemli Bilgiler",
+      "network": "Ağ:",
+      "confirmations": "Onay:",
+      "eta": "Tahmini süre:"
+    },
+    "warn": {
+      "title": "Önemli:",
+      "body": "Bu adrese yalnızca {{token}} tokenları gönderin. Diğer tokenlar kalıcı kayba neden olabilir."
+    },
+    "common": { "wallet": "Cüzdan" }
+  },
+
+  "actions": {
+    "refresh": "Yenile",
+    "refreshing": "Yenileniyor…",
+    "viewAll": "Tümünü Gör",
+    "send": "Gönder",
+    "receive": "Al",
+    "convert": "Dönüştür",
+    "buy": "Satın Al",
+    "buyCrypto": "Kripto Satın Al",
+    "connectWallet": "Cüzdanı Bağla",
+    "unlockWallet": "Cüzdanı Kilitten Aç"
+  },
+  "labels": {
+    "balance": "BAKİYE",
+    "ethereum": "Ethereum",
+    "solana": "Solana",
+    "tron": "TRON",
+    "notConnected": "— bağlı değil —",
+    "recentActivity": "Son İşlemler"
+  },
+  "hints": {
+    "refreshBalances": "Bakiyeleri yenile",
+    "connectToRefresh": "Yenilemek için bir cüzdan bağlayın",
+    "unlockToRefresh": "Yenilemek için cüzdanı kilitten açın",
+    "unlockToSeeTx": "İşlemleri görmek için cüzdan bağlayın.",
+    "noActivity": "Henüz işlem yok."
+  },
+  "history": {
+    "title": "İşlem Geçmişi",
+    "subtitle": "İşlem geçmişinizi görüntüleyin ve yönetin",
+    "searchPlaceholder": "İşlemlerde ara...",
+    "filters": {
+      "type": {
+        "placeholder": "İşlem Türü",
+        "all": "Tüm Türler"
+      },
+      "network": {
+        "placeholder": "Ağ",
+        "all": "Tüm Ağlar"
+      },
+      "more": "Daha Fazla Filtre"
+    },
+    "recentTitle": "Son İşlemler",
+    "type": {
+      "send": "Gönder",
+      "receive": "Al",
+      "convert": "Dönüştür",
+      "buy": "Satın Al"
+    },
+    "status": {
+      "completed": "Tamamlandı",
+      "pending": "Beklemede",
+      "failed": "Başarısız"
+    },
+    "labels": {
+      "to": "Alıcı",
+      "from": "Gönderen",
+      "details": "Detaylar",
+      "network": "Ağ",
+      "fee": "Ücret",
+      "hash": "Hash"
+    },
+    "empty": {
+      "title": "İşlem bulunamadı",
+      "subtitle": "Arama veya filtre ölçütlerini değiştirin"
+    }
+  },
+  "landing": {
+    "hero": {
+      "badge": "Artık TRON ve Solana destekleniyor",
+      "title": {
+        "line1": "takas et, transfer yap, satın al.",
+        "your": "senin ",
+        "favourite": "favori",
+        "wallet": "çok zincirli cüzdan"
+      },
+      "subtitle": "TRON ve Solana ekosistemleri için en gelişmiş cüzdan. Kriptonuzu kolayca gönderin, alın ve dönüştürün.",
+      "cta": {
+        "launch": "Renee cüzdanını başlat",
+        "viewMore": "Daha fazlasını gör"
+      }
+    },
+    "stats": {
+      "supportedNetworks": "Desteklenen Ağlar",
+      "activeUsers": "Aktif Kullanıcı",
+      "volumeProcessed": "İşlenen Hacim",
+      "uptime": "Çalışır Durum"
+    },
+    "features": {
+      "heading": {
+        "prefix": "Tam gaz devam et, ",
+        "highlight": "kendi yolunla"
+      },
+      "subtitle": "TRON ve Solana varlıklarınızı tek bir şık arayüzde yönetmek için ihtiyacınız olan her şey",
+      "sendReceive": {
+        "title": "Gönder & Al",
+        "desc": "Düşük ücretlerle TRON ve Solana ağları arasında sorunsuz kripto transferi yapın"
+      },
+      "fiatToCrypto": {
+        "title": "Fiattan Kriptoya",
+        "desc": "Fiat para birimini güvenli ödeme işlemiyle doğrudan USDT'ye dönüştürün"
+      },
+      "security": {
+        "title": "Banka Düzeyinde Güvenlik",
+        "desc": "Gelişmiş şifreleme ve biyometrik korumaya sahip saklama hizmeti vermeyen cüzdan"
+      },
+      "mobile": {
+        "title": "Mobil Uyumlu",
+        "desc": "Tüm cihazlarda kusursuz çalışan duyarlı tasarım"
+      }
+    },
+    "networks": {
+      "heading": {
+        "prefix": "Çok zincirli, ",
+        "highlight": "tasarım gereği"
+      },
+      "subtitle": "Önde gelen blokzincir ağları için yerel destekle DeFi'nin geleceği için inşa edildi",
+      "desc": {
+        "tron": "Hızlı ve düşük maliyetli işlemler",
+        "solana": "Yüksek hızlı ve ölçeklenebilir ağ",
+        "usdt": "Stabil dijital para birimi"
+      }
+    },
+    "ecosystem": {
+      "title": "Ekosistem tarafından güvenilir"
+    },
+    "security": {
+      "heading": {
+        "prefix": "Güvenlik",
+        "suffix": ", garanti altında"
+      },
+      "subtitle": "Güvenlik endişesi olmadan kontrol sizde",
+      "points": {
+        "nonCustodial": {
+          "title": "Saklama hizmeti yok",
+          "desc": "Varlıklarınız her zaman sizin kontrolünüzde"
+        },
+        "audited": {
+          "title": "Denetlenmiş ve Güvenli",
+          "desc": "Lider blokzincir güvenlik uzmanlarınca denetlenmiştir"
+        },
+        "openSource": {
+          "title": "Açık Kaynak",
+          "desc": "Önce doğrulayın, sonra güvenin. Kodumuz incelemeye açıktır"
+        }
+      },
+      "panel": {
+        "title": "Anahtarlarınız sizde, kriptonuz sizde",
+        "bioUnlock": "Biyometrik kilit açma",
+        "hwSupport": "Donanım cüzdan desteği",
+        "encryption": "Gelişmiş şifreleme"
+      }
+    },
+    "cta": {
+      "heading": {
+        "prefix": "Hazır mısınız ",
+        "highlight": "başlamaya",
+        "suffix": "?"
+      },
+      "subtitle": "Renee cüzdanıyla kriptosunu yöneten binlerce kullanıcıya katılın",
+      "launch": "Cüzdanı Başlat",
+      "community": "Topluluğa Katıl"
+    }
+  }
+
+}

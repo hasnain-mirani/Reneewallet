@@ -1,17 +1,17 @@
+// src/pages/Dashboard.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import WalletCard from "@/components/ui/WalletCard";
 import ActionButton from "@/components/ui/ActionButton";
-import { Send, Download, ArrowUpDown, Plus, Activity, RefreshCw } from "lucide-react";
+import { Send, Download, ArrowUpDown, Plus, TrendingUp, Activity, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import AddressPanel from "@/components/wallet-ui/AddressPanel";
-import SendPanel from "@/components/wallet-ui/SendPanel";
-import WalletSetup from "@/components/wallet-ui/WalletSetup";
+
 import { useWallet } from "@/wallet/store";
 import AddressPill from "@/components/wallet/AddressPill";
 import { useWalletModal } from "@/components/wallet/useWalletModal";
-import { apiFetch } from "@/lib/apiClient"; // ⬅️ use relative /api through your backend
+import LanguageSwitcher from "@/components/LanguageSwitcher"; // ✅ fixed import name
+import { useTranslation } from "react-i18next";
 
 type Prices = { solUsd: number; trxUsd: number };
 
@@ -19,10 +19,14 @@ function formatUSD(n: number) {
   return n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 }
 
+async function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 export default function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  // NOTE: we no longer use store.getBalances (it was hitting absolute HTTP somewhere).
-  const { sol, tron, encrypted } = useWallet();
+  const { sol, tron, getBalances, encrypted } = useWallet();
   const { open: openWalletModal } = useWalletModal();
 
   const [loading, setLoading] = useState(false);
@@ -35,70 +39,30 @@ export default function Dashboard() {
   const isUnlocked = hasSol || hasTron;
   const hasVault = !!encrypted;
 
-  // --- prices via backend proxy to avoid CORS/rate-limit problems
+  // --- fetch USD prices
   async function fetchPrices(): Promise<Prices> {
     try {
-      // Your Nginx/Vercel proxy should forward this to CoinGecko:
-      // /api/market/prices?ids=solana,tron&vs=usd
-      const j = await apiFetch<any>("/market/prices?ids=solana,tron&vs=usd");
+      const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana,tron&vs_currencies=usd", {
+        headers: { "Cache-Control": "no-cache" },
+      });
+      const j = await r.json();
       return {
-        solUsd: Number(j?.solana?.usd ?? 0),
-        trxUsd: Number(j?.tron?.usd ?? 0),
+        solUsd: j?.solana?.usd ?? 0,
+        trxUsd: j?.tron?.usd ?? 0,
       };
     } catch {
       return { solUsd: 0, trxUsd: 0 };
     }
   }
 
-  // --- balances via your backend (relative paths = HTTPS-safe on Vercel)
-  async function getBalancesViaApi() {
-    let solBal = 0;
-    let trxBal = 0;
-
-    const jobs: Promise<void>[] = [];
-
-    if (hasSol && sol?.address) {
-      jobs.push(
-        apiFetch<any>("/rpc/solana", {
-          method: "POST",
-          body: { method: "getBalance", params: [sol.address] },
-        })
-          .then((r) => {
-            // Standard JSON-RPC getBalance => { result: { value: lamports } }
-            const lamports =
-              Number(r?.result?.value ?? r?.value ?? r?.lamports ?? 0) || 0;
-            solBal = lamports / 1e9; // lamports -> SOL
-          })
-          .catch(() => {})
-      );
-    }
-
-    if (hasTron && tron?.address) {
-      jobs.push(
-        apiFetch<any>("/rpc/tron/wallet/getaccount", {
-          method: "POST",
-          body: { address: tron.address },
-        })
-          .then((r) => {
-            // TronGrid style returns balance in SUN
-            const sun = Number(r?.balance ?? r?.data?.balance ?? r?.result?.balance ?? 0) || 0;
-            trxBal = sun / 1e6; // SUN -> TRX
-          })
-          .catch(() => {})
-      );
-    }
-
-    await Promise.all(jobs);
-    return { sol: solBal, trx: trxBal };
-  }
-
-  // --- refresh both prices + balances
+  // --- fetch balances via store (now tolerant to partials)
   async function refreshAll() {
     if (!isUnlocked) return;
     setLoading(true);
     try {
-      const [p, b] = await Promise.all([fetchPrices(), getBalancesViaApi()]);
+      const [p, b] = await Promise.all([fetchPrices(), getBalances()]);
       setPrices(p);
+      // b.sol / b.trx are always numbers (0 if missing)
       setSolBalance(hasSol ? b.sol : null);
       setTrxBalance(hasTron ? b.trx : null);
     } finally {
@@ -112,7 +76,7 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sol?.address, tron?.address]);
 
-  // light polling every 20s while unlocked
+  // light polling every 20s while unlocked (keeps UI fresh after sends)
   useEffect(() => {
     if (!isUnlocked) return;
     const id = setInterval(() => {
@@ -131,10 +95,17 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Language switcher */}
+        <div className="flex justify-end mb-2">
+        
+        </div>
+
         {/* Portfolio Overview */}
         <div className="mb-8">
           <div className="text-center mb-4">
-            <h1 className="text-3xl font-bold text-foreground mb-2">BALANCE</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              {t("labels.balance", { defaultValue: "BALANCE" })}
+            </h1>
             <div className="text-4xl font-bold bg-gradient-neon bg-clip-text text-transparent mb-2">
               {formatUSD(totalUsd)}
             </div>
@@ -146,20 +117,26 @@ export default function Dashboard() {
                 onClick={refreshAll}
                 disabled={!isUnlocked || loading}
                 className="rounded-full"
-                title={isUnlocked ? "Refresh balances" : "Unlock wallet to refresh"}
+                title={
+                  isUnlocked
+                    ? t("hints.refreshBalances", { defaultValue: "Refresh balances" })
+                    : t("hints.unlockToRefresh", { defaultValue: "Unlock wallet to refresh" })
+                }
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                {loading ? "Refreshing…" : "Refresh"}
+                {loading
+                  ? t("actions.refreshing", { defaultValue: "Refreshing…" })
+                  : t("actions.refresh", { defaultValue: "Refresh" })}
               </Button>
 
               {!hasVault && (
                 <Button size="sm" onClick={openWalletModal} className="rounded-full">
-                  Connect Wallet
+                  {t("actions.connectWallet", { defaultValue: "Connect Wallet" })}
                 </Button>
               )}
               {hasVault && !isUnlocked && (
                 <Button size="sm" variant="secondary" onClick={openWalletModal} className="rounded-full">
-                  Unlock Wallet
+                  {t("actions.unlockWallet", { defaultValue: "Unlock Wallet" })}
                 </Button>
               )}
             </div>
@@ -167,24 +144,46 @@ export default function Dashboard() {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <ActionButton icon={Send} label="Send" onClick={() => navigate("/send")} variant="primary" disabled={!isUnlocked} />
-            <ActionButton icon={Download} label="Receive" onClick={() => navigate("/receive")} disabled={!isUnlocked} />
-            <ActionButton icon={ArrowUpDown} label="Convert" onClick={() => navigate("/convert")} disabled={!isUnlocked} />
-            <ActionButton icon={Plus} label="Buy Crypto" onClick={() => navigate("/buy")} />
+            <ActionButton
+              icon={Send}
+              label={t("actions.send", { defaultValue: "Send" })}
+              onClick={() => navigate("/send")}
+              variant="primary"
+              disabled={!isUnlocked}
+            />
+            <ActionButton
+              icon={Download}
+              label={t("actions.receive", { defaultValue: "Receive" })}
+              onClick={() => navigate("/receive")}
+              disabled={!isUnlocked}
+            />
+            <ActionButton
+              icon={ArrowUpDown}
+              label={t("actions.convert", { defaultValue: "Convert" })}
+              onClick={() => navigate("/convert")}
+              disabled={!isUnlocked}
+            />
+            <ActionButton
+              icon={Plus}
+              label={t("actions.buyCrypto", { defaultValue: "Buy Crypto" })}
+              onClick={() => navigate("/buy")}
+            />
           </div>
         </div>
 
-        {/* Wallet Cards */}
+        {/* Wallet Cards (dynamic) */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* TRON */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">TRON</h3>
+              <h3 className="text-lg font-semibold">{t("labels.tron", { defaultValue: "TRON" })}</h3>
               <AddressPill label="TRON" address={tron?.address} />
             </div>
             <WalletCard
               balance={
-                trxBalance === null ? "— TRX" : `${trxBalance.toLocaleString(undefined, { maximumFractionDigits: 6 })} TRX`
+                trxBalance === null
+                  ? "— TRX"
+                  : `${trxBalance.toLocaleString(undefined, { maximumFractionDigits: 6 })} TRX`
               }
               usdValue={formatUSD((trxBalance ?? 0) * (prices.trxUsd || 0))}
               change24h={0}
@@ -195,12 +194,14 @@ export default function Dashboard() {
           {/* Solana */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Solana</h3>
+              <h3 className="text-lg font-semibold">{t("labels.solana", { defaultValue: "Solana" })}</h3>
               <AddressPill label="SOL" address={sol?.address} />
             </div>
             <WalletCard
               balance={
-                solBalance === null ? "— SOL" : `${solBalance.toLocaleString(undefined, { maximumFractionDigits: 6 })} SOL`
+                solBalance === null
+                  ? "— SOL"
+                  : `${solBalance.toLocaleString(undefined, { maximumFractionDigits: 6 })} SOL`
               }
               usdValue={formatUSD((solBalance ?? 0) * (prices.solUsd || 0))}
               change24h={0}
@@ -209,27 +210,22 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Panels */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-          <WalletSetup />
-          <AddressPanel />
-          <SendPanel />
-        </div>
-
         {/* Recent Activity */}
         <Card className="bg-gradient-card border-border/50 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
               <Activity className="w-5 h-5 text-primary" />
-              <span>Recent Activity</span>
+              <span>{t("labels.recentActivity", { defaultValue: "Recent Activity" })}</span>
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={() => navigate("/history")} disabled={!isUnlocked}>
-              View All
+              {t("actions.viewAll", { defaultValue: "View All" })}
             </Button>
           </CardHeader>
           <CardContent>
             <div className="text-sm text-muted-foreground">
-              {isUnlocked ? "No recent activity yet." : "Unlock your wallet to see transactions."}
+              {isUnlocked
+                ? t("hints.noActivity", { defaultValue: "No recent activity yet." })
+                : t("hints.unlockToSeeTx", { defaultValue: "Unlock your wallet to see transactions." })}
             </div>
           </CardContent>
         </Card>

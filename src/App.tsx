@@ -3,8 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import RootLayout from "@/layouts/RootLayout";
 import { AuthProvider } from "@/contexts/AuthContext"; // uses useNavigate inside
 import { WalletModalProvider } from "@/components/wallet/WalletModalContext";
 import WalletConnectModal from "@/components/wallet/WalletConnectModal";
@@ -32,17 +32,33 @@ import Transactions from "./pages/admin/Transactions";
 import Analytics from "./pages/admin/Analytics";
 import Security from "./pages/admin/Security";
 import { AdminLayout } from "./components/AdminLayout";
-import {ProtectedRoute} from "./components/ProtectedRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+
+// ✅ one global language switcher
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const queryClient = new QueryClient();
 
 function AppShell() {
+  // Hide switcher on Landing ("/" or "/landing")
+  const { pathname } = useLocation();
+  const hideLang = pathname === "/" || pathname === "/landing";
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
+
+      {/* Global Language Switcher (single instance) */}
+      {!hideLang && (
+        <div className="px-4 pt-2 flex justify-end">
+          <LanguageSwitcher />
+        </div>
+      )}
+
       <main className="flex-1">
         <Routes>
           {/* Public */}
+          {/* Removed: <Route element={<RootLayout />} /> (no-op before) */}
           <Route path="/" element={<Landing />} />
           <Route path="/portfolio" element={<Dashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -131,6 +147,7 @@ function AppShell() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+
       <Footer />
     </div>
   );

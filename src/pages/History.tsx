@@ -5,8 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { History, Send, Download, ArrowUpDown, Search, Filter, ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const HistoryPage = () => {
+  const { t } = useTranslation();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterNetwork, setFilterNetwork] = useState("all");
@@ -70,14 +73,15 @@ const HistoryPage = () => {
   ];
 
   const filteredTransactions = transactions.filter(tx => {
-    const matchesSearch = tx.amount.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tx.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (tx.to && tx.to.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (tx.from && tx.from.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+    const matchesSearch =
+      tx.amount.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tx.to && tx.to.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (tx.from && tx.from.toLowerCase().includes(searchTerm.toLowerCase()));
+
     const matchesType = filterType === "all" || tx.type.toLowerCase() === filterType;
     const matchesNetwork = filterNetwork === "all" || tx.network.toLowerCase() === filterNetwork;
-    
+
     return matchesSearch && matchesType && matchesNetwork;
   });
 
@@ -122,12 +126,22 @@ const HistoryPage = () => {
     }
   };
 
+  // 🔠 Translation helpers (display-only; underlying values remain English for filters/colors)
+  const trType = (type: string) =>
+    t(`history.type.${type.toLowerCase()}`, { defaultValue: type });
+  const trStatus = (status: string) =>
+    t(`history.status.${status.toLowerCase()}`, { defaultValue: status });
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Transaction History</h1>
-          <p className="text-muted-foreground">View and manage your transaction history</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {t("history.title", { defaultValue: "Transaction History" })}
+          </h1>
+          <p className="text-muted-foreground">
+            {t("history.subtitle", { defaultValue: "View and manage your transaction history" })}
+          </p>
         </div>
 
         {/* Filters */}
@@ -137,32 +151,32 @@ const HistoryPage = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
-                  placeholder="Search transactions..."
+                  placeholder={t("history.searchPlaceholder", { defaultValue: "Search transactions..." })}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
-              
+
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Transaction Type" />
+                  <SelectValue placeholder={t("history.filters.type.placeholder", { defaultValue: "Transaction Type" })} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="send">Send</SelectItem>
-                  <SelectItem value="receive">Receive</SelectItem>
-                  <SelectItem value="convert">Convert</SelectItem>
-                  <SelectItem value="buy">Buy</SelectItem>
+                  <SelectItem value="all">{t("history.filters.type.all", { defaultValue: "All Types" })}</SelectItem>
+                  <SelectItem value="send">{t("history.type.send", { defaultValue: "Send" })}</SelectItem>
+                  <SelectItem value="receive">{t("history.type.receive", { defaultValue: "Receive" })}</SelectItem>
+                  <SelectItem value="convert">{t("history.type.convert", { defaultValue: "Convert" })}</SelectItem>
+                  <SelectItem value="buy">{t("history.type.buy", { defaultValue: "Buy" })}</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={filterNetwork} onValueChange={setFilterNetwork}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Network" />
+                  <SelectValue placeholder={t("history.filters.network.placeholder", { defaultValue: "Network" })} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Networks</SelectItem>
+                  <SelectItem value="all">{t("history.filters.network.all", { defaultValue: "All Networks" })}</SelectItem>
                   <SelectItem value="tron">TRON</SelectItem>
                   <SelectItem value="solana">Solana</SelectItem>
                 </SelectContent>
@@ -170,7 +184,7 @@ const HistoryPage = () => {
 
               <Button variant="outline" className="flex items-center space-x-2">
                 <Filter className="w-4 h-4" />
-                <span>More Filters</span>
+                <span>{t("history.filters.more", { defaultValue: "More Filters" })}</span>
               </Button>
             </div>
           </CardContent>
@@ -181,7 +195,7 @@ const HistoryPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <History className="w-5 h-5 text-primary" />
-              <span>Recent Transactions</span>
+              <span>{t("history.recentTitle", { defaultValue: "Recent Transactions" })}</span>
               <Badge variant="secondary">{filteredTransactions.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -195,20 +209,24 @@ const HistoryPage = () => {
                         {getTypeIcon(tx.type)}
                       </div>
                       <div>
-                        <div className="font-medium text-card-foreground">{tx.type}</div>
+                        <div className="font-medium text-card-foreground">{trType(tx.type)}</div>
                         <div className="text-sm text-muted-foreground">{tx.time}</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`font-medium ${
-                        tx.amount.startsWith("+") ? "text-green-600" :
-                        tx.amount.startsWith("-") ? "text-red-600" :
-                        "text-card-foreground"
-                      }`}>
+                      <div
+                        className={`font-medium ${
+                          tx.amount.startsWith("+")
+                            ? "text-green-600"
+                            : tx.amount.startsWith("-")
+                            ? "text-red-600"
+                            : "text-card-foreground"
+                        }`}
+                      >
                         {tx.amount}
                       </div>
                       <Badge className={getStatusColor(tx.status)} variant="secondary">
-                        {tx.status}
+                        {trStatus(tx.status)}
                       </Badge>
                     </div>
                   </div>
@@ -216,27 +234,31 @@ const HistoryPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground">
                     {tx.to && (
                       <div>
-                        <span className="font-medium">To:</span> {tx.to.slice(0, 10)}...{tx.to.slice(-6)}
+                        <span className="font-medium">{t("history.labels.to", { defaultValue: "To" })}:</span>{" "}
+                        {tx.to.slice(0, 10)}...{tx.to.slice(-6)}
                       </div>
                     )}
                     {tx.from && (
                       <div>
-                        <span className="font-medium">From:</span> {tx.from.slice(0, 10)}...{tx.from.slice(-6)}
+                        <span className="font-medium">{t("history.labels.from", { defaultValue: "From" })}:</span>{" "}
+                        {tx.from.slice(0, 10)}...{tx.from.slice(-6)}
                       </div>
                     )}
                     {tx.details && (
                       <div>
-                        <span className="font-medium">Details:</span> {tx.details}
+                        <span className="font-medium">{t("history.labels.details", { defaultValue: "Details" })}:</span>{" "}
+                        {tx.details}
                       </div>
                     )}
                     <div>
-                      <span className="font-medium">Network:</span> {tx.network}
+                      <span className="font-medium">{t("history.labels.network", { defaultValue: "Network" })}:</span>{" "}
+                      {tx.network}
                     </div>
                     <div>
-                      <span className="font-medium">Fee:</span> {tx.fee}
+                      <span className="font-medium">{t("history.labels.fee", { defaultValue: "Fee" })}:</span> {tx.fee}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="font-medium">Hash:</span>
+                      <span className="font-medium">{t("history.labels.hash", { defaultValue: "Hash" })}:</span>
                       <span>{tx.hash}</span>
                       <Button variant="ghost" size="sm" className="h-auto p-1">
                         <ExternalLink className="w-3 h-3" />
@@ -250,8 +272,12 @@ const HistoryPage = () => {
             {filteredTransactions.length === 0 && (
               <div className="text-center py-8">
                 <History className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-card-foreground mb-2">No transactions found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filter criteria</p>
+                <h3 className="text-lg font-medium text-card-foreground mb-2">
+                  {t("history.empty.title", { defaultValue: "No transactions found" })}
+                </h3>
+                <p className="text-muted-foreground">
+                  {t("history.empty.subtitle", { defaultValue: "Try adjusting your search or filter criteria" })}
+                </p>
               </div>
             )}
           </CardContent>

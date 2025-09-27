@@ -69,7 +69,7 @@ export function WalletModalProvider({ children }: { children: React.ReactNode })
   const connectSolanaRpc = useCallback(async () => {
     setConnecting(true);
     try {
-      const r = await fetch(`${BACKEND}/rpc/solana`, {
+      const r = await fetch(`${BACKEND}/api/rpc/solana`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jsonrpc: "2.0", id: "ping", method: "getSlot" }),
@@ -88,7 +88,7 @@ export function WalletModalProvider({ children }: { children: React.ReactNode })
   const connectTronRpc = useCallback(async () => {
     setConnecting(true);
     try {
-      const r = await fetch(`${BACKEND}/rpc/tron/wallet/getnowblock`, {
+      const r = await fetch(`${BACKEND}/api/rpc/tron/wallet/getnowblock`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "{}",

@@ -10,6 +10,7 @@ import { Send, ArrowRight, QrCode, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/wallet/store";
 import { ethers } from "ethers";
+import { useTranslation } from "react-i18next";
 
 type NetType = "tron" | "solana" | "evm-native" | "evm-erc20";
 
@@ -91,16 +92,15 @@ async function getEvmNativeBalance(ethProvider: any) {
 
 /* --------- lightweight address validators (client-side) --------- */
 function isValidTron(addr: string) {
-  // TRON mainnet base58check addresses usually: 34 chars, start with 'T'
   return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(addr.trim());
 }
 function isValidSol(addr: string) {
-  // Solana base58, 32-44 chars (pubkeys are 44), no 0/O/I/l
   return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr.trim());
 }
 
 /* ----------------------- Component ----------------------- */
 export default function SendPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { encrypted, sol, tron, getBalances, sendSOL, sendTRX } = useWallet();
 
@@ -130,7 +130,7 @@ export default function SendPage() {
         setSolBal(b.sol);
         setTrxBal(b.trx);
       } catch {
-        // ignore
+        /* ignore */
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -148,7 +148,7 @@ export default function SendPage() {
         const bal = await getEvmNativeBalance(eth);
         setEthBal(bal);
       } catch {
-        // ignore
+        /* ignore */
       }
     })();
   }, [selected]);
@@ -170,21 +170,37 @@ export default function SendPage() {
 
   async function handleSend() {
     if (!selected || !recipient || !amount) {
-      toast({ title: "Missing info", description: "Please fill in network, recipient and amount.", variant: "destructive" });
+      toast({
+        title: t("send.toast.missing.title", { defaultValue: "Missing info" }),
+        description: t("send.toast.missing.desc", { defaultValue: "Please fill in network, recipient and amount." }),
+        variant: "destructive",
+      });
       return;
     }
 
     // per-chain recipient validation
     if (selected.type === "tron" && !isValidTron(recipient)) {
-      toast({ title: "Invalid TRON address", description: "TRON addresses start with T and are 34 chars.", variant: "destructive" });
+      toast({
+        title: t("send.toast.badTron.title", { defaultValue: "Invalid TRON address" }),
+        description: t("send.toast.badTron.desc", { defaultValue: "TRON addresses start with T and are 34 chars." }),
+        variant: "destructive",
+      });
       return;
     }
     if (selected.type === "solana" && !isValidSol(recipient)) {
-      toast({ title: "Invalid Solana address", description: "Enter a valid base58 Solana address.", variant: "destructive" });
+      toast({
+        title: t("send.toast.badSol.title", { defaultValue: "Invalid Solana address" }),
+        description: t("send.toast.badSol.desc", { defaultValue: "Enter a valid base58 Solana address." }),
+        variant: "destructive",
+      });
       return;
     }
     if ((selected.type === "evm-native" || selected.type === "evm-erc20") && !ethers.isAddress(recipient)) {
-      toast({ title: "Invalid EVM address", description: "Enter a valid 0x… address.", variant: "destructive" });
+      toast({
+        title: t("send.toast.badEvm.title", { defaultValue: "Invalid EVM address" }),
+        description: t("send.toast.badEvm.desc", { defaultValue: "Enter a valid 0x… address." }),
+        variant: "destructive",
+      });
       return;
     }
 
@@ -192,11 +208,14 @@ export default function SendPage() {
       setLoading(true);
 
       if (selected.type === "tron") {
-        if (!encrypted) throw new Error("No wallet found. Create or import first.");
-        if (!tron?.address) throw new Error("Wallet locked. Unlock from the header.");
-        if (!password) throw new Error("Enter your wallet password to sign.");
+        if (!encrypted) throw new Error(t("send.errors.noWallet", { defaultValue: "No wallet found. Create or import first." }));
+        if (!tron?.address) throw new Error(t("send.errors.locked", { defaultValue: "Wallet locked. Unlock from the header." }));
+        if (!password) throw new Error(t("send.errors.needPassword", { defaultValue: "Enter your wallet password to sign." }));
         const txid = await sendTRX(recipient.trim(), Number(amount), password);
-        toast({ title: "TRON sent", description: `Tx: ${txid.slice(0, 10)}…${txid.slice(-8)}` });
+        toast({
+          title: t("send.toast.tronSent.title", { defaultValue: "TRON sent" }),
+          description: t("send.toast.tronSent.desc", { defaultValue: "Tx: {{tx}}", tx: `${txid.slice(0, 10)}…${txid.slice(-8)}` }),
+        });
 
         // poll balances (TRON)
         for (let i = 0; i < 5; i++) {
@@ -208,11 +227,14 @@ export default function SendPage() {
           } catch {}
         }
       } else if (selected.type === "solana") {
-        if (!encrypted) throw new Error("No wallet found. Create or import first.");
-        if (!sol?.address) throw new Error("Wallet locked. Unlock from the header.");
-        if (!password) throw new Error("Enter your wallet password to sign.");
+        if (!encrypted) throw new Error(t("send.errors.noWallet", { defaultValue: "No wallet found. Create or import first." }));
+        if (!sol?.address) throw new Error(t("send.errors.locked", { defaultValue: "Wallet locked. Unlock from the header." }));
+        if (!password) throw new Error(t("send.errors.needPassword", { defaultValue: "Enter your wallet password to sign." }));
         const sig = await sendSOL(recipient.trim(), Number(amount), password);
-        toast({ title: "Solana sent", description: `Sig: ${sig.slice(0, 10)}…${sig.slice(-8)}` });
+        toast({
+          title: t("send.toast.solSent.title", { defaultValue: "Solana sent" }),
+          description: t("send.toast.solSent.desc", { defaultValue: "Sig: {{sig}}", sig: `${sig.slice(0, 10)}…${sig.slice(-8)}` }),
+        });
 
         // poll balances (Solana)
         for (let i = 0; i < 5; i++) {
@@ -225,7 +247,7 @@ export default function SendPage() {
         }
       } else if (selected.type === "evm-native" || selected.type === "evm-erc20") {
         const eth = (window as any).ethereum;
-        if (!eth) throw new Error("MetaMask not detected.");
+        if (!eth) throw new Error(t("send.errors.noMetamask", { defaultValue: "MetaMask not detected." }));
         if (selected.chainId) await ensureChain(eth, selected.chainId);
 
         let hash = "";
@@ -235,9 +257,11 @@ export default function SendPage() {
           if (!selected.tokenAddress) throw new Error("Token address missing for ERC-20.");
           hash = await sendEvmErc20(eth, selected.tokenAddress, recipient.trim(), amount);
         }
-        toast({ title: "EVM transaction sent", description: `Hash: ${hash.slice(0, 10)}…${hash.slice(-8)}` });
+        toast({
+          title: t("send.toast.evmSent.title", { defaultValue: "EVM transaction sent" }),
+          description: t("send.toast.evmSent.desc", { defaultValue: "Hash: {{hash}}", hash: `${hash.slice(0, 10)}…${hash.slice(-8)}` }),
+        });
 
-        // refresh EVM native balance snapshot if that was selected
         if (selected.type === "evm-native") {
           try {
             const bal = await getEvmNativeBalance(eth);
@@ -246,13 +270,16 @@ export default function SendPage() {
         }
       }
 
-      // reset minimal fields
       setAmount("");
       setMemo("");
       setPassword("");
     } catch (e: any) {
       if (e?.code === 4001) return; // user rejected
-      toast({ title: "Transaction failed", description: e?.message || "Please try again.", variant: "destructive" });
+      toast({
+        title: t("send.toast.failed.title", { defaultValue: "Transaction failed" }),
+        description: e?.message || t("send.toast.failed.desc", { defaultValue: "Please try again." }),
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -267,7 +294,7 @@ export default function SendPage() {
     } else if (selected.type === "evm-native" && ethBal != null) {
       setAmount(Math.max(ethBal - 0.001, 0).toString()); // gas buffer
     } else {
-      // ERC20 max would need token balance query (not added here)
+      // ERC20 max would need token balance query
     }
   }
 
@@ -275,25 +302,29 @@ export default function SendPage() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-bold text-foreground">Send Crypto</h1>
-          <p className="text-muted-foreground">Send your crypto to any wallet address</p>
+          <h1 className="mb-2 text-3xl font-bold text-foreground">
+            {t("send.title", { defaultValue: "Send Crypto" })}
+          </h1>
+          <p className="text-muted-foreground">
+            {t("send.subtitle", { defaultValue: "Send your crypto to any wallet address" })}
+          </p>
         </div>
 
         <Card className="border-border/50 bg-gradient-card shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Send className="h-5 w-5 text-primary" />
-              <span>Send Transaction</span>
+              <span>{t("send.cardTitle", { defaultValue: "Send Transaction" })}</span>
             </CardTitle>
           </CardHeader>
 
           <CardContent className="space-y-6">
             {/* Network Selection */}
             <div className="space-y-2">
-              <Label htmlFor="network">Select Network & Token</Label>
+              <Label htmlFor="network">{t("send.selectNetwork", { defaultValue: "Select Network & Token" })}</Label>
               <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
                 <SelectTrigger id="network">
-                  <SelectValue placeholder="Choose network and token" />
+                  <SelectValue placeholder={t("send.chooseNetwork", { defaultValue: "Choose network and token" })} />
                 </SelectTrigger>
                 <SelectContent>
                   {NETWORKS_WITH_BAL.map((n) => (
@@ -310,26 +341,28 @@ export default function SendPage() {
               </Select>
               {selected && (
                 <div className="text-sm text-muted-foreground">
-                  {selected.fee ? `Network fee: ${selected.fee}` : "Network fee depends on gas"}
+                  {selected.fee
+                    ? t("send.networkFee", { defaultValue: "Network fee: {{fee}}", fee: selected.fee })
+                    : t("send.networkFeeGas", { defaultValue: "Network fee depends on gas" })}
                 </div>
               )}
             </div>
 
             {/* Recipient Address */}
             <div className="space-y-2">
-              <Label htmlFor="recipient">Recipient Address</Label>
+              <Label htmlFor="recipient">{t("send.recipient", { defaultValue: "Recipient Address" })}</Label>
               <div className="flex space-x-2">
                 <Input
                   id="recipient"
-                  placeholder="Enter wallet address"
+                  placeholder={t("send.recipientPlaceholder", { defaultValue: "Enter wallet address" })}
                   value={recipient}
                   onChange={(e) => setRecipient(e.target.value)}
                   className="flex-1"
                 />
-                <Button variant="outline" size="sm" className="px-3" title="Scan QR (coming soon)">
+                <Button variant="outline" size="sm" className="px-3" title={t("send.scanQrSoon", { defaultValue: "Scan QR (coming soon)" })}>
                   <QrCode className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="sm" className="px-3" title="Address book (coming soon)">
+                <Button variant="outline" size="sm" className="px-3" title={t("send.addressBookSoon", { defaultValue: "Address book (coming soon)" })}>
                   <BookOpen className="h-4 w-4" />
                 </Button>
               </div>
@@ -337,7 +370,7 @@ export default function SendPage() {
 
             {/* Amount */}
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">{t("send.amount", { defaultValue: "Amount" })}</Label>
               <div className="flex space-x-2">
                 <Input
                   id="amount"
@@ -348,31 +381,37 @@ export default function SendPage() {
                   className="flex-1"
                 />
                 <Button variant="outline" size="sm" onClick={handleMax}>
-                  Max
+                  {t("send.max", { defaultValue: "Max" })}
                 </Button>
               </div>
               {amount && selected && (
-                <div className="text-sm text-muted-foreground">Amount: {amount} {selected.label.split(" ")[0]}</div>
+                <div className="text-sm text-muted-foreground">
+                  {t("send.amountLabel", {
+                    defaultValue: "Amount: {{amount}} {{sym}}",
+                    amount,
+                    sym: selected.label.split(" ")[0],
+                  })}
+                </div>
               )}
             </div>
 
             {/* Memo (Optional) */}
             <div className="space-y-2">
-              <Label htmlFor="memo">Memo (Optional)</Label>
+              <Label htmlFor="memo">{t("send.memo", { defaultValue: "Memo (Optional)" })}</Label>
               <Input
                 id="memo"
-                placeholder="Add a note for this transaction"
+                placeholder={t("send.memoPlaceholder", { defaultValue: "Add a note for this transaction" })}
                 value={memo}
                 onChange={(e) => setMemo(e.target.value)}
               />
               {selected?.type === "solana" && (
                 <div className="text-[11px] text-muted-foreground">
-                  (Note: current send uses native SOL transfer. Memo is not yet included.)
+                  {t("send.noteSol", { defaultValue: "(Note: current send uses native SOL transfer. Memo is not yet included.)" })}
                 </div>
               )}
               {selected?.type === "tron" && (
                 <div className="text-[11px] text-muted-foreground">
-                  (Note: TRX transfer via RPC. Memo/tag not used for native transfers.)
+                  {t("send.noteTrx", { defaultValue: "(Note: TRX transfer via RPC. Memo/tag not used for native transfers.)" })}
                 </div>
               )}
             </div>
@@ -380,11 +419,11 @@ export default function SendPage() {
             {/* Password for Sol/Tron signing */}
             {(selected?.type === "tron" || selected?.type === "solana") && (
               <div className="space-y-2">
-                <Label htmlFor="pwd">Wallet Password</Label>
+                <Label htmlFor="pwd">{t("send.walletPassword", { defaultValue: "Wallet Password" })}</Label>
                 <Input
                   id="pwd"
                   type="password"
-                  placeholder="Enter your wallet password to sign"
+                  placeholder={t("send.passwordPlaceholder", { defaultValue: "Enter your wallet password to sign" })}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -395,22 +434,20 @@ export default function SendPage() {
             {selected && amount && (
               <Card className="border-border/50 bg-muted/50">
                 <CardContent className="p-4">
-                  <h4 className="mb-3 font-medium">Transaction Summary</h4>
+                  <h4 className="mb-3 font-medium">{t("send.summary.title", { defaultValue: "Transaction Summary" })}</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Amount:</span>
-                      <span>
-                        {amount} {selected.label.split(" ")[0]}
-                      </span>
+                      <span className="text-muted-foreground">{t("send.summary.amount", { defaultValue: "Amount:" })}</span>
+                      <span>{amount} {selected.label.split(" ")[0]}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Network Fee:</span>
-                      <span>{selected.fee ?? "Gas (variable)"}</span>
+                      <span className="text-muted-foreground">{t("send.summary.fee", { defaultValue: "Network Fee:" })}</span>
+                      <span>{selected.fee ?? t("send.gasVariable", { defaultValue: "Gas (variable)" })}</span>
                     </div>
                     <div className="flex justify-between border-t pt-2 font-medium">
-                      <span>Total:</span>
+                      <span>{t("send.summary.total", { defaultValue: "Total:" })}</span>
                       <span>
-                        {amount} {selected.label.split(" ")[0]} + {selected.fee ?? "Gas"}
+                        {amount} {selected.label.split(" ")[0]} + {selected.fee ?? t("send.gas", { defaultValue: "Gas" })}
                       </span>
                     </div>
                   </div>
@@ -426,7 +463,7 @@ export default function SendPage() {
               disabled={!selectedNetwork || !recipient || !amount || loading}
             >
               <Send className="mr-2 h-4 w-4" />
-              {loading ? "Sending…" : "Send Transaction"}
+              {loading ? t("send.sending", { defaultValue: "Sending…" }) : t("send.cta", { defaultValue: "Send Transaction" })}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardContent>

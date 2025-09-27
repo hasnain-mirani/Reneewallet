@@ -1,0 +1,183 @@
+{
+  "nav": {
+    "portfolio": "Portfolio",
+    "staking": "Staking",
+    "trade": "Trade",
+    "swap": "Swap",
+    "send": "Send",
+    "buy": "Buy",
+    "deposit": "Deposit",
+    "rewards": "Rewards",
+    "reneeFest": "Renee Wallet Fest",
+    "new": "NEW",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  }
+,
+
+
+    
+  "send": {
+    "title": "Send Crypto",
+    "subtitle": "Send your crypto to any wallet address",
+    "cardTitle": "Send Transaction",
+    "selectNetwork": "Select Network & Token",
+    "chooseNetwork": "Choose network and token",
+    "networkFee": "Network fee: {{fee}}",
+    "networkFeeGas": "Network fee depends on gas",
+    "recipient": "Recipient Address",
+    "recipientPlaceholder": "Enter wallet address",
+    "scanQrSoon": "Scan QR (coming soon)",
+    "addressBookSoon": "Address book (coming soon)",
+    "amount": "Amount",
+    "max": "Max",
+    "amountLabel": "Amount: {{amount}} {{sym}}",
+    "memo": "Memo (Optional)",
+    "memoPlaceholder": "Add a note for this transaction",
+    "noteSol": "(Note: current send uses native SOL transfer. Memo is not yet included.)",
+    "noteTrx": "(Note: TRX transfer via RPC. Memo/tag not used for native transfers.)",
+    "walletPassword": "Wallet Password",
+    "passwordPlaceholder": "Enter your wallet password to sign",
+    "summary": {
+      "title": "Transaction Summary",
+      "amount": "Amount:",
+      "fee": "Network Fee:",
+      "total": "Total:"
+    },
+    "gasVariable": "Gas (variable)",
+    "gas": "Gas",
+    "cta": "Send Transaction",
+    "sending": "Sending…",
+    "toast": {
+      "missing": { "title": "Missing info", "desc": "Please fill in network, recipient and amount." },
+      "badTron": { "title": "Invalid TRON address", "desc": "TRON addresses start with T and are 34 chars." },
+      "badSol": { "title": "Invalid Solana address", "desc": "Enter a valid base58 Solana address." },
+      "badEvm": { "title": "Invalid EVM address", "desc": "Enter a valid 0x… address." },
+      "tronSent": { "title": "TRON sent", "desc": "Tx: {{tx}}" },
+      "solSent": { "title": "Solana sent", "desc": "Sig: {{sig}}" },
+      "evmSent": { "title": "EVM transaction sent", "desc": "Hash: {{hash}}" },
+      "failed": { "title": "Transaction failed", "desc": "Please try again." }
+    },
+    "errors": {
+      "noWallet": "No wallet found. Create or import first.",
+      "locked": "Wallet locked. Unlock from the header.",
+      "needPassword": "Enter your wallet password to sign.",
+      "noMetamask": "MetaMask not detected."
+    }
+  }
+,
+
+   
+  "actions": { "connectWallet": "Connect Wallet" },
+  "convert": {
+    "title": "Convert & Buy",
+    "subtitle": "Direct Uniswap v3 swaps (no 3rd-party aggregators)",
+    "cardTitle": "Token Conversion",
+    "from": "From",
+    "to": "To",
+    "selectToken": "Select token",
+    "swapTokens": "Swap tokens",
+    "convertTokens": "Convert Tokens",
+    "availableViaCard": "Available via card",
+    "connectHintMetaMask": "Connect MetaMask to swap on Ethereum.",
+    "toast": {
+      "missing": { "title": "Missing info", "desc": "Fill all fields" },
+      "onramp": { "title": "On-ramp", "desc": "Open your payment provider here." },
+      "notsupported": {
+        "title": "Not supported here",
+        "desc": "This demo only swaps ETH ↔ USDT on Ethereum via Uniswap v3."
+      },
+      "needWallet": { "title": "Connect wallet", "desc": "Please connect MetaMask first." },
+      "failed": { "title": "Swap failed", "desc": "Try again." }
+    }
+  }
+,
+
+
+  "wallet": {
+    "connected": "Connected",
+    "connectedTitle": "Wallet connected",
+    "connectErrorTitle": "Connection failed",
+    "connectErrorDesc": "Please try again."
+  },
+
+ 
+  "staking": {
+    "hero": {
+      "stakedCount": "{{count}} token staked"
+    },
+    "banner": {
+      "title": "Renee Wallet",
+      "desc": "Stake supported assets and earn rewards",
+      "tag": "Staking",
+      "secureTitle": "Secure & Non-custodial",
+      "secureDesc": "You keep your keys while earning on-chain rewards"
+    },
+    "cards": {
+      "totalValue": "Total staking value",
+      "claimable": "Claimable rewards"
+    },
+    "actions": {
+      "stake": "Stake",
+      "unstake": "Unstake",
+      "redelegate": "Redelegate",
+      "claim": "Claim"
+    },
+    "tabs": {
+      "delegations": "My delegations",
+      "unstaking": "Unstaking in progress"
+    },
+    "search": {
+      "placeholder": "Search by token name or address"
+    },
+    "filters": {
+      "chain": {
+        "placeholder": "All chains",
+        "all": "All chains"
+      }
+    },
+    "table": {
+      "title": "Staked positions",
+      "subtitle": "Your delegations and APR by token",
+      "columns": {
+        "token": "Token",
+        "apr": "APR",
+        "staked": "Staked amount"
+      }
+    },
+    "empty": "You haven't staked any tokens yet"
+  }
+,
+
+    
+  "notFound": {
+    "message": "Oops! Page not found",
+    "backHome": "Return to Home"
+  }
+,
+  "actions": {
+    "refresh": "Refresh",
+    "viewAll": "View All",
+    "send": "Send",
+    "receive": "Receive",
+    "convert": "Convert",
+    "buy": "Buy Crypto",
+    "connectWallet": "Connect Wallet",
+    "unlockWallet": "Unlock Wallet"
+  },
+  "labels": {
+    "balance": "BALANCE",
+    "ethereum": "Ethereum",
+    "solana": "Solana",
+    "tron": "TRON",
+    "notConnected": "— not connected —",
+    "recentActivity": "Recent Activity"
+  },
+  "hints": {
+    "refreshBalances": "Refresh balances",
+    "connectToRefresh": "Connect a wallet to refresh",
+    "unlockToSeeTx": "Connect a wallet to see transactions.",
+    "noActivity": "No recent activity yet."
+  }
+}
+
